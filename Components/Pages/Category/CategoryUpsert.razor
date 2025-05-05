@@ -1,0 +1,93 @@
+﻿@page "/categories/create"
+@page "/categories/update/{id:int}"
+@inject ICategoryRepository _categoryRepo
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
+@if (Loading)
+{
+    <_Loading></_Loading>
+}
+else
+{
+    <div class="card shadow border-0 mt-4">
+        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">@(Id > 0 ? "Edit" : "Create") Category</h2>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <EditForm Model="Category" FormName="CategoryUpsertForm" OnValidSubmit="UpsertCategory">
+                <DataAnnotationsValidator />
+                <div class="border p-3 mt-4">
+                    <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="Category.Name" class="form-control" id="Name" placeholder="Category Name" />
+                        <label for="Name">Category Name</label>
+                        <ValidationMessage For="@(() => Category.Name)" />
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control" disabled="@Loading">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="categories" class="btn btn-sceondary form-control" disabled="@Loading">
+                            <i class="bi bi-arrow-bar-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Category Category { get; set; } = new Category();
+
+    private bool Loading { get; set; } = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (Id > 0)
+            {
+                Category = await GetCategory();
+            }
+            Loading = false;
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task UpsertCategory()
+    {
+        Loading = true;
+        string successMessage = Id > 0 ? "Category Updated Successfully" : "Category Created Successfully";
+
+        if (Id > 0)
+        {
+            await _categoryRepo.UpdateAsync(Category);
+        }
+        else
+        {
+            await _categoryRepo.CreateAsync(Category);
+        }
+        await _jsRuntime.ToastrSuccess(successMessage);
+        Loading = false;
+        _navigationManager.NavigateTo("categories");
+    }
+
+    private async Task<Category> GetCategory()
+    {
+        return await _categoryRepo.GetByIdAsync(Id);
+    }
+}
