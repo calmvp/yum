@@ -13,5 +13,15 @@ namespace Yum.Services.Extensions
         {
             await jsRuntime.InvokeVoidAsync("showToastr", "error", message);
         }
+
+        public static async Task OpenModal(this IJSRuntime jsRuntime, string modalId)
+        {
+            await jsRuntime.InvokeVoidAsync("openModal", modalId);
+        }
+
+        public static async Task CloseModal(this IJSRuntime jsRuntime, string modalId)
+        {
+            await jsRuntime.InvokeVoidAsync("closeModal", modalId);
+        }
     }
 }

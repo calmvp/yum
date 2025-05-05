@@ -1,0 +1,49 @@
+﻿@inject IJSRuntime _jsRuntime;
+
+<div class="modal fade" id="@ModalId" tabindex="-1" role="dialog" aria-labelledby="@ModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fs-5" id="@ModalTitle">@ModalTitle</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @ChildContent
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="HandleClose" style="width: 150px;">@CloseText</button>
+                <button type="button" class="btn @ConfirmButtonStyle"  @onclick="OnConfirm" style="width: 150px;">@ConfirmText</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ModalId { get; set; } = "defaultModal";
+
+    [Parameter]
+    public string ModalTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CloseText { get; set; } = "Close";
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "Confirm";
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set;  }
+
+    [Parameter]
+    public string ConfirmButtonStyle { get; set; } = string.Empty;
+
+    public async Task HandleClose()
+    {
+        await _jsRuntime.CloseModal(ModalId);
+    }
+}

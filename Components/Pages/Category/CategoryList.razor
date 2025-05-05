@@ -1,5 +1,6 @@
 ﻿@page "/categories"
 @inject ICategoryRepository _categoryRepo
+@inject IJSRuntime _jsRuntime
 
 @if (Loading)
 {
@@ -7,6 +8,14 @@
 }
 else
 {
+    <_BootstrapModal 
+    ModalId="@DELETE_MODAL_ID" 
+    ModalTitle="Confirm Category Deletion"
+    OnConfirm="@(() => ConfirmDelete())"
+    ConfirmButtonStyle = "btn-danger"
+    >
+        <p>Are you sure you want to delete this category?</p>
+    </_BootstrapModal>
     <div class="card shadow border-0 mt-4">
         <div class="card-header bg-black bg-gradient m-lg-0 py-3">
             <div class="row">
@@ -45,7 +54,7 @@ else
                                         <i class="bi bi-pencil-square"></i>
                                         Edit
                                     </a>
-                                    <button class="btn btn-danger">
+                                    <button class="btn btn-danger" @onclick="@(() => OpenDeleteModal(cat.Id))">
                                         <i class="bi bi-trash3"></i>
                                         Delete
                                     </button>
@@ -61,8 +70,10 @@ else
 }
 
 @code {
+    private const string DELETE_MODAL_ID = "deleteModal";
     public bool Loading { get; set; } = true;
     private IEnumerable<Category> Categories { get; set; } = new List<Category>();
+    private int DeleteCategoryId { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -77,5 +88,35 @@ else
     private async Task<IEnumerable<Category>> GetCategories()
     {
         return await _categoryRepo.GetAllAsync();
+    }
+
+    private async Task OpenDeleteModal(int id)
+    {
+        DeleteCategoryId = id;
+        await _jsRuntime.OpenModal(DELETE_MODAL_ID);
+    }
+
+    private async Task ConfirmDelete()
+    {
+        Loading = true;
+        await _jsRuntime.CloseModal(DELETE_MODAL_ID);
+        if (DeleteCategoryId > 0)
+        {
+            var res = await _categoryRepo.DeleteAsync(DeleteCategoryId);
+            if (res)
+            {
+                await _jsRuntime.ToastrSuccess("Category deleted successfully");
+            }
+            else
+            {
+                await _jsRuntime.ToastrError("Category delete failed");
+            }
+            
+
+            Categories = await GetCategories();
+        }
+
+        DeleteCategoryId = 0;
+        Loading = false;
     }
 }
