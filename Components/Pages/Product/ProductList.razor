@@ -1,5 +1,6 @@
-﻿@page "/categories"
-@inject ICategoryRepository _categoryRepo
+﻿@page "/products"
+@inject IProductRepository _productRepo
+@inject IProductService _productService
 @inject IJSRuntime _jsRuntime
 
 @if (Loading)
@@ -10,52 +11,64 @@ else
 {
     <_BootstrapModal 
     ModalId="@DELETE_MODAL_ID" 
-    ModalTitle="Confirm Category Deletion"
+    ModalTitle="Confirm Product Deletion"
     OnConfirm="@(() => ConfirmDelete())"
     ConfirmButtonStyle = "btn-danger"
     ConfirmText="Delete"
     >
-        <p>Are you sure you want to delete this category?</p>
+        <p>Are you sure you want to delete this product?</p>
     </_BootstrapModal>
     <div class="card shadow border-0 mt-4">
         <div class="card-header bg-black bg-gradient m-lg-0 py-3">
             <div class="row">
                 <div class="col-12 text-center">
-                    <h2 class="text-white py-2">Category List</h2>
+                    <h2 class="text-white py-2">Product List</h2>
                 </div>
             </div>
         </div>
         <div class="card-body p-4">
             <div class="row pb-3">
                 <div class="col-12 text-end">
-                    <a href="categories/create" class="btn btn-lg btn-secondary" style="width:250px;">
+                    <a href="products/create" class="btn btn-lg btn-secondary" style="width:250px;">
                         <i class="bi bi-plus-square"></i>
-                        Add New Category
+                        Add New Product
                     </a>
                 </div>
             </div>
-            @if (Categories.Any())
+            @if (Products.Any())
             {
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Price</th>
+                            <th>Tag</th>
+                            <th>Category</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var cat in Categories)
+                        @foreach(var product in Products)
                         {
                             <tr>
                                 <td>
-                                    @cat.Name
+                                    @product.Name
                                 </td>
                                 <td>
-                                    <a href="@($"categories/update/{cat.Id}")" class="btn btn-primary">
+                                    @product.Price
+                                </td>
+                                <td>
+                                    <span class="badge text-bg-info">@product.SpecialTag</span>
+                                </td>
+                                <td>
+                                    @product.Category.Name
+                                </td>
+                                <td>
+                                    <a href="@($"products/update/{product.Id}")" class="btn btn-primary">
                                         <i class="bi bi-pencil-square"></i>
                                         Edit
                                     </a>
-                                    <button class="btn btn-danger" @onclick="@(() => OpenDeleteModal(cat.Id))">
+                                    <button class="btn btn-danger" @onclick="@(() => OpenDeleteModal(product.Id))">
                                         <i class="bi bi-trash3"></i>
                                         Delete
                                     </button>
@@ -73,27 +86,27 @@ else
 @code {
     private const string DELETE_MODAL_ID = "deleteModal";
     public bool Loading { get; set; } = true;
-    private IEnumerable<Category> Categories { get; set; } = new List<Category>();
-    private int DeleteCategoryId { get; set; }
+    private IEnumerable<Product> Products { get; set; } = new List<Product>();
+    private int DeleteProductId { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            Categories = await GetCategories();
+            Products = await GetProducts();
             Loading = false;
             StateHasChanged();
         }
     }
 
-    private async Task<IEnumerable<Category>> GetCategories()
+    private async Task<IEnumerable<Product>> GetProducts()
     {
-        return await _categoryRepo.GetAllAsync();
+        return await _productRepo.GetAllAsync();
     }
 
     private async Task OpenDeleteModal(int id)
     {
-        DeleteCategoryId = id;
+        DeleteProductId = id;
         await _jsRuntime.OpenModal(DELETE_MODAL_ID);
     }
 
@@ -101,12 +114,12 @@ else
     {
         Loading = true;
         await _jsRuntime.CloseModal(DELETE_MODAL_ID);
-        if (DeleteCategoryId > 0)
+        if (DeleteProductId > 0)
         {
-            var res = await _categoryRepo.DeleteAsync(DeleteCategoryId);
+            var res = await _productService.DeleteProductAsync(DeleteProductId);
             if (res)
             {
-                await _jsRuntime.ToastrSuccess("Category deleted successfully");
+                await _jsRuntime.ToastrSuccess("Product deleted successfully");
             }
             else
             {
@@ -114,10 +127,10 @@ else
             }
             
 
-            Categories = await GetCategories();
+            Products = await GetProducts();
         }
 
-        DeleteCategoryId = 0;
+        DeleteProductId = 0;
         Loading = false;
     }
 }

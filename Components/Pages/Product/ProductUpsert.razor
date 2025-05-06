@@ -1,0 +1,189 @@
+﻿@page "/products/create"
+@page "/products/update/{id:int}"
+@inject IProductRepository _productRepo
+@inject ICategoryRepository _categoryRepo
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+@inject IWebHostEnvironment _env
+
+@if (Loading)
+{
+    <_Loading></_Loading>
+}
+else
+{
+    <div class="card shadow border-0 mt-4">
+        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">@(Id > 0 ? "Edit" : "Create") Product</h2>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <EditForm Model="Product" FormName="ProductUpsertForm" OnValidSubmit="UpsertProduct">
+                <DataAnnotationsValidator />
+                <div class="border p-3 mt-4">
+                    <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="Product.Name" class="form-control" id="Name" placeholder="Product Name" />
+                        <label for="Name">Product Name</label>
+                        <ValidationMessage For="@(() => Product.Name)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="Product.Description" class="form-control" id="Description" placeholder="Product Description" />
+                        <label for="Name">Product Description</label>
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputText @bind-Value="Product.SpecialTag" class="form-control" id="Tag" placeholder="Tag" />
+                        <label for="Name">Tag</label>
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputNumber @bind-Value="Product.Price" class="form-control" id="Price" placeholder="Product Price" />
+                        <label for="Name">Price</label>
+                        <ValidationMessage For="@(() => Product.Price)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        <InputSelect @bind-Value="Product.CategoryId" class="form-select" id="Category">
+                            <option value="0" disabled selected>Select Category</option>
+                            @foreach(var category in Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </InputSelect>
+                        <label for="Name">Categories</label>
+                        <ValidationMessage For="@(() => Product.CategoryId)" />
+                    </div>
+                    <div class="form-floating py-3 col-12">
+                        @if (Product.ImageUrl != null)
+                        {
+                            <div class="row">
+                                <div class="col-3">
+                                    <img src="@Product.ImageUrl" alt="product-image" class="img-thumbnail" />
+                                </div>
+                                <div class="col-md-9">
+                                    <i class="bi bi-trash btn btn-outline-danger" @onclick="DeleteImage">Remove</i>
+                                </div>
+                            </div>
+                        } 
+                        else
+                        {
+                            <InputFile class="form-control" id="customFile" accept="image/x-png,image/jpeg" OnChange="LoadFiles"></InputFile>
+                            <label for="customFile">Upload Image</label>
+                        }
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control" disabled="@Loading">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="products" class="btn btn-sceondary form-control" disabled="@Loading">
+                            <i class="bi bi-arrow-bar-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Product Product { get; set; } = new Product();
+
+    private IEnumerable<Category> Categories { get; set; } = new List<Category>();
+
+    private bool Loading { get; set; } = true;
+
+    private string? _directoryPath { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        _directoryPath = Path.Combine(_env.WebRootPath, "lib/images", "product");
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (Id > 0)
+            {
+                Product = await GetProductAsync();
+            }
+            Categories = await GetCategoriesAsync();
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpsertProduct()
+    {
+        Loading = true;
+        string successMessage = Id > 0 ? "Product Updated Successfully" : "Product Created Successfully";
+
+        if (Id > 0)
+        {
+            await _productRepo.UpdateAsync(Product);
+        }
+        else
+        {
+            await _productRepo.CreateAsync(Product);
+        }
+        await _jsRuntime.ToastrSuccess(successMessage);
+        Loading = false;
+        _navigationManager.NavigateTo("products");
+    }
+
+    private async Task<Product> GetProductAsync()
+    {
+        return await _productRepo.GetByIdAsync(Id);
+    }
+
+    private async Task<IEnumerable<Category>> GetCategoriesAsync()
+    {
+        return await _categoryRepo.GetAllAsync();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        Loading = true;
+        var file = e.File;
+        FileInfo fileInfo = new(file.Name);
+        var newFileName = $"{Guid.NewGuid()}{fileInfo.Extension}";
+        if (!Directory.Exists(_directoryPath))
+        {
+            Directory.CreateDirectory(_directoryPath);
+        }
+
+        var path = Path.Combine(_directoryPath, newFileName);
+
+        await using FileStream fileStream = new(path, FileMode.Create);
+        await file.OpenReadStream(file.Size).CopyToAsync(fileStream);
+        Product.ImageUrl = $"/lib/images/product/{newFileName}";
+        Loading = false;
+    }
+
+    private void DeleteImage()
+    {
+        if (Product.ImageUrl is null)
+            return;
+
+        var fileName = Product.ImageUrl.Split('/').Last();
+
+        var filePathToDeleteImage = Path.Combine(_directoryPath, fileName);
+
+        if (!File.Exists(filePathToDeleteImage))
+            return;
+
+        File.Delete(filePathToDeleteImage);
+
+        Product.ImageUrl = null;
+        return;
+    }
+}

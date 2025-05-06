@@ -6,6 +6,8 @@ using Yum.Components.Account;
 using Yum.Data;
 using Yum.Repositories;
 using Yum.Repositories.Interfaces;
+using Yum.Services;
+using Yum.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddTransient<IProductService, ProductService>();
 
 var app = builder.Build();
 
