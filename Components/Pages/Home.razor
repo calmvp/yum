@@ -1,7 +1,104 @@
 ﻿@page "/"
+@inject ICategoryRepository _categoryRepo
+@inject IProductRepository _productRepo
 
-<PageTitle>Home</PageTitle>
+@if (Loading)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="container-fluid px-0 m-0 full-width">
+        <div class="jumbotron-custom">
+            <div class="m-auto d-flex align-items-center" style="width: 400px; height: 50vh;">
 
-<h1>Hello, world!</h1>
+                <div class="d-flex align-items-center" style="width: 100%;">
+                    <input type="text" class="form-control rounded-pill"
+                    placeholder="Search for Food Items!"
+                    style="width: 100%; padding: 20px;">
+                    <span style="position: relative; left: -43px;"><i class="bi bi-search"></i></span>
+                </div>
+            </div>
+        </div>
 
-Welcome to your new app.
+        <div class="content px-4 m-2">
+            <ul class="nav nav-underline justify-content-center mb-2">
+                <li class="nav-item" @onclick="@(() => FilterProductsByCategory())">
+                    <span class="nav-link" href="#" style="cursor: pointer">All</span>
+                </li>
+                @foreach(var category in Categories)
+                {
+                    <li class="nav-item" @onclick="@(() => FilterProductsByCategory(category.Id))">
+                        <span class="nav-link" href="#" style="cursor: pointer">@category.Name</span>
+                    </li>
+                }
+            </ul>
+            <div class="row mt-4 mx-1">
+                @if (FilteredProducts.Any())
+                {
+                    foreach(var product in FilteredProducts)
+                    {
+                        <ProductTile Product="@product"></ProductTile>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code{
+    private IEnumerable<Category> Categories = new List<Category>();
+    private IEnumerable<Product> Products = new List<Product>();
+    private IEnumerable<Product> FilteredProducts = new List<Product>();
+    private bool Loading { get; set; } = true;
+    private int _selectedCategoryId;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Categories = await GetCategories();
+            Products = await GetProducts();
+            FilteredProducts = Products;
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<IEnumerable<Product>> GetProducts()
+    {
+        return await _productRepo.GetAllAsync();
+    }
+
+    private async Task<IEnumerable<Category>> GetCategories()
+    {
+        return await _categoryRepo.GetAllAsync();
+    }
+
+    private void FilterProductsByCategory(int categoryId = 0)
+    {
+        _selectedCategoryId = categoryId;
+        if (categoryId == 0)
+        {
+            FilteredProducts = Products;
+        }
+        else
+        {
+            FilteredProducts = Products.Where(p => p.CategoryId == categoryId).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private void FilterProductByName(string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            FilteredProducts = Products;
+        }
+        else
+        {
+            FilteredProducts = Products.Where(p => p.Name.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        }
+    }
+}

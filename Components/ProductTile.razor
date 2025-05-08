@@ -1,0 +1,39 @@
+﻿@using System.Globalization
+
+<div class="col-12 col-md-6 col-lg-4 pe-3 mb-5">
+    <div class="card">
+        <div class="mt-3 mb-2 row">
+            <div class="col-6 px-3">
+                @if (!string.IsNullOrEmpty(Product.SpecialTag)) 
+                {
+                    <i class="bi bi-star btn btn-outline-success disabled"> @Product.SpecialTag</i>
+                }
+            </div>
+            <div class="col-6 text-end text-danger px-3 h3">
+                @Product.Price.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+            </div>
+        </div>
+        <div class="text-center">
+            @if (!string.IsNullOrEmpty(Product.ImageUrl))
+            {
+                <img class="card-img-top img-thumbnail img-rounded w-50 mt-2" src="@Product.ImageUrl" style="">
+            }
+            else
+            {
+                <img class="card-img-top img-thumbnail img-rounded w-50 mt-2" src="images/default.png" style="">
+            }
+        </div>
+        <div class="card-body">
+            <h5 class="card-title text-center lead text-success">@Product.Name</h5>
+            <p class="card-text mt-2">@((MarkupString)Product?.Description)</p>
+            <h4 class="text-center">
+                <i class="bi bi-cart3 btn btn-success text-right px-5 form-control" style="width:300px"> Add to cart</i>
+            </h4>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Product Product { get; set; }
+}
