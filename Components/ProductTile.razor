@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@inject ICartLineItemRepository _cartLineItemRepo
 
 <div class="col-12 col-md-6 col-lg-4 pe-3 mb-5">
     <div class="card">
@@ -27,7 +28,7 @@
             <h5 class="card-title text-center lead text-success">@Product.Name</h5>
             <p class="card-text mt-2">@((MarkupString)Product?.Description)</p>
             <h4 class="text-center">
-                <i class="bi bi-cart3 btn btn-success text-right px-5 form-control" style="width:300px"> Add to cart</i>
+                <i class="bi bi-cart3 btn btn-success text-right px-5 form-control" style="width:300px" @onclick="@Add"> Add to cart</i>
             </h4>
         </div>
     </div>
@@ -36,4 +37,16 @@
 @code {
     [Parameter]
     public Product Product { get; set; }
+
+    // private async Task AddLineItem()
+    // {
+    //     var auth
+    // }
+    [CascadingParameter]
+    public bool IsAuthenticated { get; set; }
+
+    public void Add()
+    {
+        var cat = IsAuthenticated;
+    }
 }

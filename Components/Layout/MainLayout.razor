@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Security.Claims
+@inherits LayoutComponentBase
 @inject AuthenticationStateProvider _authenticationStateProvider
 
 <div class="page">
@@ -18,7 +19,9 @@
         </div>
 
         <article class="content px-4">
-            @Body
+            <CascadingValue Value="@IsAuthenticated">
+                @Body
+            </CascadingValue>
         </article>
     </main>
 </div>
@@ -31,6 +34,7 @@
 
 @code {
     private bool _showNavBar;
+    bool IsAuthenticated { get { return UserAuthenticated().Result; }}
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,8 +45,7 @@
     {
         var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        var authenticated = user is not null && user.Identity is not null && user.Identity.IsAuthenticated;
-
+        var authenticated = await UserAuthenticated(user);
         if (!authenticated)
             return true;
 
@@ -52,5 +55,16 @@
         }
 
         return false;
+    }
+
+    private async Task<bool> UserAuthenticated(ClaimsPrincipal? user = null)
+    {
+        if (user is null)
+        {
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            user = authState.User;
+        }
+
+        return (user is not null && user.Identity is not null && user.Identity.IsAuthenticated);
     }
 }

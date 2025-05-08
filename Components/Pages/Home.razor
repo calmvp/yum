@@ -15,7 +15,9 @@ else
                 <div class="d-flex align-items-center" style="width: 100%;">
                     <input type="text" class="form-control rounded-pill"
                     placeholder="Search for Food Items!"
-                    style="width: 100%; padding: 20px;">
+                    style="width: 100%; padding: 20px;"
+                    @oninput="@((e) => FilterProductsByName(e))"
+                    >
                     <span style="position: relative; left: -43px;"><i class="bi bi-search"></i></span>
                 </div>
             </div>
@@ -24,12 +26,12 @@ else
         <div class="content px-4 m-2">
             <ul class="nav nav-underline justify-content-center mb-2">
                 <li class="nav-item" @onclick="@(() => FilterProductsByCategory())">
-                    <span class="nav-link" href="#" style="cursor: pointer">All</span>
+                    <span class="nav-link @GetActiveTabClass()" href="#" style="cursor: pointer">All</span>
                 </li>
                 @foreach(var category in Categories)
                 {
                     <li class="nav-item" @onclick="@(() => FilterProductsByCategory(category.Id))">
-                        <span class="nav-link" href="#" style="cursor: pointer">@category.Name</span>
+                        <span class="nav-link @GetActiveTabClass(category.Id)" href="#" style="cursor: pointer">@category.Name</span>
                     </li>
                 }
             </ul>
@@ -52,6 +54,7 @@ else
     private IEnumerable<Product> FilteredProducts = new List<Product>();
     private bool Loading { get; set; } = true;
     private int _selectedCategoryId;
+    private string _searchText = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -90,8 +93,23 @@ else
         StateHasChanged();
     }
 
-    private void FilterProductByName(string searchText)
+    // private void FilterProductsByName(string searchText)
+    // {
+    //     if (string.IsNullOrWhiteSpace(searchText))
+    //     {
+    //         FilteredProducts = Products;
+    //     }
+    //     else
+    //     {
+    //         FilteredProducts = Products.Where(p => p.Name.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
+    //     }
+    //     _searchText = searchText;
+    // }
+
+    private void FilterProductsByName(ChangeEventArgs changeEventArgs)
     {
+        var searchText = changeEventArgs.Value as string;
+
         if (string.IsNullOrWhiteSpace(searchText))
         {
             FilteredProducts = Products;
@@ -100,5 +118,10 @@ else
         {
             FilteredProducts = Products.Where(p => p.Name.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
         }
+    }
+
+    private string GetActiveTabClass(int categoryId = 0)
+    {
+        return categoryId == _selectedCategoryId ? "active" : string.Empty;
     }
 }
