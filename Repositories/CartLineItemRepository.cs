@@ -46,7 +46,7 @@ namespace Yum.Repositories
 
         public async Task<IEnumerable<CartLineItem>> GetAllUserItemsAsync(string userId)
         {
-            return await _db.CartLineItems.Where(u => u.UserId == userId).ToListAsync();
+            return await _db.CartLineItems.Include(c => c.Product).Where(u => u.UserId == userId).ToListAsync();
         }
 
         public async Task<bool> ClearUserCartItemsAsync(string userId) 

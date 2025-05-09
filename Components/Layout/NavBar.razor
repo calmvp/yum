@@ -15,11 +15,15 @@
 						<span class="bi bi-house-door" aria-hidden="true"></span> Home
 					</NavLink>
 				</li>
-				<li class="nav-item">
-					<NavLink class="nav-link" href="">
-						<span class="bi bi-cart3" aria-hidden="true"></span> Cart
-					</NavLink>
-				</li>
+				<AuthorizeView>
+					<Authorized>	
+						<li class="nav-item">
+							<NavLink class="nav-link" href="/cart">
+								<span class="bi bi-cart3" aria-hidden="true"></span> Cart
+							</NavLink>
+						</li>
+					</Authorized>
+				</AuthorizeView>
 			</ul>
 			<ul class="d-flex navbar-nav mb-2 mb-md-0">
 				<AuthorizeView>

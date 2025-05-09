@@ -10,7 +10,7 @@
     </AuthorizeView>
 
     <main>
-        @if (_showNavBar)
+        @if (showNavBar)
         {
             <NavBar></NavBar>
         }
@@ -19,8 +19,10 @@
         </div>
 
         <article class="content px-4">
-            <CascadingValue Value="@IsAuthenticated">
-                @Body
+            <CascadingValue Value="@isAuthenticated">
+                <CascadingValue Value="@userId">
+                    @Body
+                </CascadingValue>
             </CascadingValue>
         </article>
     </main>
@@ -33,20 +35,20 @@
 </div>
 
 @code {
-    private bool _showNavBar;
+    private bool showNavBar;
+    private bool isAdmin;
+    private bool isAuthenticated;
+    private string userId;
     bool IsAuthenticated { get { return UserAuthenticated().Result; }}
 
     protected override async Task OnInitializedAsync()
     {
-        _showNavBar = await GetNavBarVisibleAsync();
+        await SetUserContextAsync();
     }
 
-    private async Task<bool> GetNavBarVisibleAsync()
+    private async Task<bool> GetNavBarVisibleAsync(ClaimsPrincipal user)
     {
-        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var authenticated = await UserAuthenticated(user);
-        if (!authenticated)
+        if (!isAuthenticated)
             return true;
 
         if (user is not null && !user.IsInRole(Roles.Admin))
@@ -66,5 +68,18 @@
         }
 
         return (user is not null && user.Identity is not null && user.Identity.IsAuthenticated);
+    }
+
+    private async Task SetUserContextAsync()
+    {
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user is not null)
+        {
+            isAuthenticated = user is not null && user.Identity is not null && user.Identity.IsAuthenticated;
+            isAdmin = user.IsInRole(Roles.Admin);
+            userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        }
+        showNavBar = await GetNavBarVisibleAsync(user);
     }
 }

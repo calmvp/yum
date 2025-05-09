@@ -1,97 +1,132 @@
 ﻿@page "/cart"
+@using System.Globalization
 @inject AuthenticationStateProvider _authStateProvider
 @inject IJSRuntime _jsRuntime
 @inject NavigationManager _navManager
 @inject IProductRepository _productRepo
 @inject ICategoryRepository _categoryRepo
+@inject ICartLineItemRepository _cartLineItemRepo
 
-<div class="row w-100">
-	<div class="col-lg-6 col-12">
-		<div class="container p-4 m-2">
-			<h4 class="text-center text-success display-6">
-				Cart Summary
-			</h4>
+@if (Loading)
+{
+	<Loading></Loading>
+}
+else
+{
+	<div class="row w-100">
+		<div class="col-lg-6 col-12">
+			<div class="container p-4 m-2">
+				<h4 class="text-center text-success display-6">
+					Cart Summary
+				</h4>
+				@foreach (var item in CartLineItems)
+				{
+					<CartItem LineItem="@item" OnItemUpdate="UpdateCartLineItem"></CartItem>
+				}
+			</div>
+		</div>
+		<div class="col-lg-6 col-12 p-4">
+			<div class="card">
+				<div class="card-header text-success text-center display-6">
+					Pickup Details
+				</div>
+				<div class="card-body">
+					<form>
+						<div class="form-group">
+							<label>Name</label>
+							<input type="text" class="form-control" />
+						</div>
+						<div class="form-group">
+							<label>Email</label>
+							<input type="text" class="form-control" />
+						</div>
+						<div class="form-group">
+							<label>Phone</label>
+							<input type="text" class="form-control" />
+						</div>
 
-
-			<div class="d-flex p-2 m-2">
-				<div class="card flex-row w-100">
-					<img class="card-img-left" style="width: 120px;">
-					<div class="card-body">
-						<div class="d-flex justify-content-between align-items-center">
-							<h4 class="">
-								--ProductName--
+					</form>
+					<div class="card mt-4 bg-light">
+						<div class="card-body">
+							<h4>
+								Grand Total: @CartTotal
 							</h4>
 							<h4>
-								--PRICE--
+								No. of Items: @CartItemCount
 							</h4>
 						</div>
-						<div class="flex-fill">
-							<h4 class="text-danger">
-								--COUNT*PRICE--
-							</h4>
-						</div>
-						<div class="d-flex justify-content-between align-items-center">
-							<div class="d-flex justify-content-between g-0">
-								<span>
-									<i class="bi bi-dash-circle-fill btn text-secondary"></i>
-								</span>
-								<span class="ml-1 me-1">
-									<b class="lead">--Count--</b>
-								</span>
-								<span>
-									<i class="bi bi-plus-circle-fill btn text-secondary"></i>
-								</span>
-							</div>
-							<button class="btn btn-danger">Remove</button>
-						</div>
+
 					</div>
 				</div>
-			</div>
 
+				<button class="btn btn-success m-4">
+					Looks Good? Place Order!
+				</button>
+			</div>
 		</div>
 	</div>
-	<div class="col-lg-6 col-12 p-4">
-		<div class="card">
-			<div class="card-header text-success text-center display-6">
-				Pickup Details
-			</div>
-			<div class="card-body">
-				<form>
-					<div class="form-group">
-						<label>Name</label>
-						<input type="text" class="form-control" />
-					</div>
-					<div class="form-group">
-						<label>Email</label>
-						<input type="text" class="form-control" />
-					</div>
-					<div class="form-group">
-						<label>Phone</label>
-						<input type="text" class="form-control" />
-					</div>
-
-				</form>
-				<div class="card mt-4 bg-light">
-					<div class="card-body">
-						<h4>
-							Grand Total: --$$--
-						</h4>
-						<h4>
-							No. of Items: --COUNT--
-						</h4>
-					</div>
-
-				</div>
-			</div>
-
-			<button class="btn btn-success m-4">
-				Looks Good? Place Order!
-			</button>
-		</div>
-	</div>
-</div>
-
+}
 
 @code {
+	[CascadingParameter]
+	private bool isAuthenticated { get; set; }
 
+	[CascadingParameter]
+	private string userId { get; set; }
+
+	private IEnumerable<CartLineItem> CartLineItems { get; set; } = new List<CartLineItem>();
+
+	private bool Loading { get; set; } = true;
+
+	private string CartTotal { get { return CartLineItems.Sum(c => c.Total).ToString("C", CultureInfo.GetCultureInfo("en-us")); } }
+
+	private int CartItemCount { get { return CartLineItems.Sum(c => c.Count ); }}
+
+	protected override void OnInitialized()
+	{
+		if (!isAuthenticated)
+		{
+			_navManager.NavigateTo("account/login", true);
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			CartLineItems = await GetCartLineItemsAsync();
+			Loading = false;
+			StateHasChanged();
+		}
+	}
+
+	private async Task<IEnumerable<CartLineItem>> GetCartLineItemsAsync()
+	{
+		return await _cartLineItemRepo.GetAllUserItemsAsync(userId);
+	}
+
+	public async Task UpdateCartLineItem((int productId, int increment) args)
+	{
+		var result = await _cartLineItemRepo.UpdateCartAsync(userId, args.productId, args.increment);
+
+		if (result)
+		{
+			var lineItem = CartLineItems.FirstOrDefault(i => i.ProductId == args.productId);
+
+			if (lineItem.Count <= 0)
+			{
+				CartLineItems = await GetCartLineItemsAsync();
+			}
+
+			var productName = lineItem?.Product?.Name;
+
+			await _jsRuntime.ToastrSuccess(args.increment > 0 ? $"{productName} added to cart" : $"{productName} removed from cart");
+		}
+		else
+		{
+			await _jsRuntime.ToastrError("Error updating item in cart");
+		}
+
+		StateHasChanged();
+	}
 }

@@ -1,5 +1,7 @@
 ﻿@using System.Globalization
 @inject ICartLineItemRepository _cartLineItemRepo
+@inject NavigationManager _navManager
+@inject IJSRuntime _jsRuntime
 
 <div class="col-12 col-md-6 col-lg-4 pe-3 mb-5">
     <div class="card">
@@ -36,17 +38,32 @@
 
 @code {
     [Parameter]
-    public Product Product { get; set; }
+    public required Product Product { get; set; }
 
-    // private async Task AddLineItem()
-    // {
-    //     var auth
-    // }
     [CascadingParameter]
-    public bool IsAuthenticated { get; set; }
+    private bool isAuthenticated { get; set; }
 
-    public void Add()
+    [CascadingParameter]
+    private string userId { get; set; }
+
+    public async Task Add()
     {
-        var cat = IsAuthenticated;
+        if (!isAuthenticated)
+        {
+            _navManager.NavigateTo("/Account/Login", true);
+        }
+        else
+        {
+            var result = await _cartLineItemRepo.UpdateCartAsync(userId, Product.Id, 1);
+
+            if (result)
+            {
+                await _jsRuntime.ToastrSuccess($"{Product.Name} added to cart");
+            }
+            else
+            {
+                await _jsRuntime.ToastrError("Error adding item to cart");
+            }
+        }
     }
 }

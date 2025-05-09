@@ -1,0 +1,56 @@
+﻿@using System.Globalization
+
+<div class="d-flex p-2 m-2">
+	<div class="card flex-row w-100">
+		<img class="card-img-left" style="width: 120px;" src="@(LineItem.Product.ImageUrl ?? "/lib/images/default.png")">
+		<div class="card-body">
+			<div class="d-flex justify-content-between align-items-center">
+				<h4 class="">
+					@LineItem.Product.Name
+				</h4>
+				&nbsp;
+				<h4>
+					@LineItem.Product.Price.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+				</h4>
+			</div>
+			<div class="flex-fill">
+				<h4 class="text-danger">
+					@LineItem.Total.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+				</h4>
+			</div>
+			<div class="d-flex justify-content-between align-items-center">
+				<div class="d-flex justify-content-between g-0">
+					<span>
+						<i 
+							class="bi bi-dash-circle-fill btn text-secondary"
+							@onclick="@(() => UpdateItem(-1))"
+						></i>
+					</span>
+					<span class="ml-1 me-1">
+						<b class="lead">@LineItem.Count</b>
+					</span>
+					<span>
+						<i 
+							class="bi bi-plus-circle-fill btn text-secondary"
+						   @onclick="@(() => UpdateItem(1))"
+						></i>
+					</span>
+				</div>
+				<button class="btn btn-danger">Remove</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public required CartLineItem LineItem { get; set; }
+
+	[Parameter]
+	public EventCallback<(int, int)> OnItemUpdate { get; set; }
+
+	private async Task UpdateItem(int increment)
+	{
+		await OnItemUpdate.InvokeAsync((LineItem.ProductId, increment));
+	}
+}

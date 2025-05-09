@@ -93,18 +93,6 @@ else
         StateHasChanged();
     }
 
-    // private void FilterProductsByName(string searchText)
-    // {
-    //     if (string.IsNullOrWhiteSpace(searchText))
-    //     {
-    //         FilteredProducts = Products;
-    //     }
-    //     else
-    //     {
-    //         FilteredProducts = Products.Where(p => p.Name.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
-    //     }
-    //     _searchText = searchText;
-    // }
 
     private void FilterProductsByName(ChangeEventArgs changeEventArgs)
     {

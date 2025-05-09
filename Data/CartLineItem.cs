@@ -11,5 +11,7 @@ namespace Yum.Data
         public int ProductId { get; set; }
         public Product Product { get; set; }
         public int Count { get; set; }
+        [NotMapped]
+        public decimal Total { get { return Count * this.Product.Price; } }
     }
 }
