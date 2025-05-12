@@ -14,8 +14,6 @@ else
 {
 	@if (CartLineItems.Any())
 	{
-
-
 		<div class="row w-100">
 			<div class="col-lg-6 col-12">
 				<div class="container p-4 m-2">
@@ -29,7 +27,7 @@ else
 				</div>
 			</div>
 			<div class="col-lg-6 col-12 p-4">
-				<OrderForm CartLineItems="@CartLineItems"></OrderForm>
+				<OrderForm CartLineItems="@CartLineItems" OnLoading="@SetLoading"></OrderForm>
 			</div>
 		</div>
 	}
@@ -101,5 +99,10 @@ else
 		}
 
 		StateHasChanged();
+	}
+
+	public async Task SetLoading(bool loading)
+	{
+		Loading = loading;
 	}
 }

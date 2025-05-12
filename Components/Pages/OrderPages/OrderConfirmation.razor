@@ -1,28 +1,16 @@
-﻿@page "/order/confirmation";
+﻿@page "/order/confirmation/{orderId}";
 @inject StateContainerService _stateContainerService
 
-@if (Loading)
-{
-    <Loading></Loading>
-}
-else
-{
-    <div class="text-center">
-        <h1 class="pt-4 text-success">You are one step closer to delicious food!</h1>
-        <p>Your order is confirmed! Please note your order ID for any questions. </p>
-        <p>Order ID: <b>@Order.OrderKey</b></p>
-        <hr />
-        <img src="lib/images/lawn_leaf.jpg" width="40%" />
-        <hr />
-    </div>
-}
+<div class="text-center">
+    <h1 class="pt-4 text-success">You are one step closer to delicious food!</h1>
+    <p>Your order is confirmed! Please note your order ID for any questions. </p>
+    <p>Order ID: <b>@orderId</b></p>
+    <hr />
+    <img src="lib/images/lawn_leaf.jpg" width="40%" />
+    <hr />
+</div>
 
 @code {
-    private bool Loading { get; set; }
-    private Order Order { get; set; }
-
-    protected override void OnInitialized()
-    {
-        Order = _stateContainerService.Value;
-    }
+    [Parameter]
+    public string orderId { get; set; }
 }

@@ -44,6 +44,7 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICartLineItemRepository, CartLineItemRepository>();
 builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddScoped<StateContainerService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 var app = builder.Build();
 

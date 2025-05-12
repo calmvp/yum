@@ -1,0 +1,145 @@
+﻿@page "/order/list"
+@using System.Globalization
+@inject IJSRuntime _jsRuntime
+@inject IOrderRepository _orderRepo
+
+@if (Loading)
+{
+    <_Loading></_Loading>
+}
+else
+{
+    <_BootstrapModal ModalId="@DELETE_MODAL_ID"
+                     ModalTitle="Confirm Order Deletion"
+                     OnConfirm="@(() => ConfirmDelete())"
+                     ConfirmButtonStyle="btn-danger"
+                     ConfirmText="Delete">
+        <p>Are you sure you want to delete this category?</p>
+    </_BootstrapModal>
+    <div class="card shadow border-0 mt-4">
+        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">Order List</h2>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="row pb-3">
+                <div class="col-12 text-end">
+                    <a href="categories/create" class="btn btn-lg btn-secondary" style="width:250px;">
+                        <i class="bi bi-plus-square"></i>
+                        Add New Order
+                    </a>
+                </div>
+            </div>
+            @if (Orders.Any())
+            {
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>Email</th>
+                            <th>Order Total</th>
+                            <th>Order Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Orders)
+                        {
+                            <tr>
+                                <td>
+                                    @order.OrderKey
+                                </td>
+                                <td>
+                                    @order.Name
+                                </td>
+                                <td>
+                                    @order.PhoneNumber
+                                </td>
+                                <td>
+                                    @order.Email
+                                </td>
+                                <td>
+                                    @order.OrderTotal.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+                                </td>
+                                <td>
+                                    @order.OrderDate.ToString("MMMM dd, yyyy");
+                                </td>
+                                <td>
+                                    @order.Status.Name
+                                </td>
+                                <td>
+                                    <a href="@($"categories/update/{order.Id}")" class="btn btn-primary">
+                                        <i class="bi bi-pencil-square"></i>
+                                        Edit
+                                    </a>
+                                    <button class="btn btn-danger" @onclick="@(() => OpenDeleteModal(order.Id))">
+                                        <i class="bi bi-trash3"></i>
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private const string DELETE_MODAL_ID = "deleteModal";
+    public bool Loading { get; set; } = true;
+    private IEnumerable<Order> Orders { get; set; } = new List<Order>();
+    private int DeleteOrderId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Orders = await GetOrdersAsync();
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<IEnumerable<Order>> GetOrdersAsync()
+    {
+        return await _orderRepo.GetAllAsync();
+    }
+
+    private async Task OpenDeleteModal(int id)
+    {
+        DeleteOrderId = id;
+        await _jsRuntime.OpenModal(DELETE_MODAL_ID);
+    }
+
+    private async Task ConfirmDelete()
+    {
+        // Loading = true;
+        // await _jsRuntime.CloseModal(DELETE_MODAL_ID);
+        // if (DeleteOrderId > 0)
+        // {
+        //     var res = await _categoryRepo.DeleteAsync(DeleteOrderId);
+        //     if (res)
+        //     {
+        //         await _jsRuntime.ToastrSuccess("Order deleted successfully");
+        //     }
+        //     else
+        //     {
+        //         await _jsRuntime.ToastrError("Order delete failed");
+        //     }
+
+
+        //     Categories = await GetCategories();
+        // }
+
+        // DeleteOrderId = 0;
+        // Loading = false;
+    }
+}

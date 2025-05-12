@@ -1,13 +1,13 @@
 ﻿@using System.Globalization
 @inject AuthenticationStateProvider _authStateProvider
-@inject StateContainerService _stateService
 @inject NavigationManager _navManager
+@inject IOrderRepository _orderRepo
 
 <div class="card">
 	<div class="card-header text-success text-center display-6">
 		Pickup Details
 	</div>
-	<EditForm Model="Order" FormName="OrderForm" OnValidSubmit="CreateOrder">
+	<EditForm Model="Order" FormName="OrderForm" OnValidSubmit="CreateOrderAsync">
 
 		<div class="card-body">
 			<div class="form-group">
@@ -45,6 +45,9 @@
 </div>
 
 @code {
+	[Parameter]
+	public EventCallback<bool> OnLoading { get; set; }
+
 	[SupplyParameterFromForm]
 	public Order Order { get; set; } = new Order();
 
@@ -65,16 +68,17 @@
 	{
 		var authState = await _authStateProvider.GetAuthenticationStateAsync();
 		var user = authState.User;
-		Order.Email = email;
 		Order.UserId = userId;
 		Order.StatusId = (int)OrderStatusEnum.Pending;
 		Order.OrderKey = Guid.NewGuid().ToString();
 	}
 
-	public void CreateOrder()
+	public async Task CreateOrderAsync()
 	{
+		OnLoading.InvokeAsync(true);
+		Order.OrderTotal = Decimal.ToDouble(CartLineItems.Sum(c => c.Total));
 		Order.Items = CartLineItems.Select(i => i.ToOrderItem()).ToList();
-		_stateService.SetValue(Order);
-		_navManager.NavigateTo($"/order/confirmation");
+		await _orderRepo.CreateAsync(Order);
+		_navManager.NavigateTo($"/order/confirmation/{Order.OrderKey}");
 	}
 }
