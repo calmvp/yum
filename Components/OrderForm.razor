@@ -1,4 +1,7 @@
-﻿@inject AuthenticationStateProvider _authStateProvider
+﻿@using System.Globalization
+@inject AuthenticationStateProvider _authStateProvider
+@inject StateContainerService _stateService
+@inject NavigationManager _navManager
 
 <div class="card">
 	<div class="card-header text-success text-center display-6">
@@ -43,10 +46,13 @@
 
 @code {
 	[SupplyParameterFromForm]
-	public Order Order { get; set; }
+	public Order Order { get; set; } = new Order();
 
-	[CascadingParameter]
+	[CascadingParameter(Name ="userId")]
 	public string userId { get; set; }
+
+	[CascadingParameter(Name = "email")]
+	public string email { get; set; }
 
 	[Parameter]
 	public IEnumerable<CartLineItem> CartLineItems { get; set; }
@@ -59,7 +65,7 @@
 	{
 		var authState = await _authStateProvider.GetAuthenticationStateAsync();
 		var user = authState.User;
-		Order.Email = user.FindFirst(u => u.Type.Contains("email"))?.Value;
+		Order.Email = email;
 		Order.UserId = userId;
 		Order.StatusId = (int)OrderStatusEnum.Pending;
 		Order.OrderKey = Guid.NewGuid().ToString();
@@ -67,6 +73,8 @@
 
 	public void CreateOrder()
 	{
-		throw new NotImplementedException();
+		Order.Items = CartLineItems.Select(i => i.ToOrderItem()).ToList();
+		_stateService.SetValue(Order);
+		_navManager.NavigateTo($"/order/confirmation");
 	}
 }

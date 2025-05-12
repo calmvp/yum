@@ -12,7 +12,7 @@
     <main>
         @if (showNavBar)
         {
-            <NavBar></NavBar>
+            <NavBar email="@email"></NavBar>
         }
         <div class="top-row px-4">
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
@@ -20,8 +20,10 @@
 
         <article class="content px-4">
             <CascadingValue Value="@isAuthenticated">
-                <CascadingValue Value="@userId">
+                <CascadingValue Name="userId" Value="@userId">
+                    <CascadingValue Name="email" Value="@email">
                     @Body
+                    </CascadingValue> 
                 </CascadingValue>
             </CascadingValue>
         </article>
@@ -39,6 +41,7 @@
     private bool isAdmin;
     private bool isAuthenticated;
     private string userId;
+    private string email;
     bool IsAuthenticated { get { return UserAuthenticated().Result; }}
 
     protected override async Task OnInitializedAsync()
@@ -79,6 +82,7 @@
             isAuthenticated = user is not null && user.Identity is not null && user.Identity.IsAuthenticated;
             isAdmin = user.IsInRole(Roles.Admin);
             userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+            email = user.FindFirst(u => u.Type.Contains("email"))?.Value;
         }
         showNavBar = await GetNavBarVisibleAsync(user);
     }

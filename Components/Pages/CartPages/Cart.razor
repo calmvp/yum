@@ -47,7 +47,7 @@ else
 	[CascadingParameter]
 	private bool isAuthenticated { get; set; }
 
-	[CascadingParameter]
+	[CascadingParameter(Name ="userId")]
 	private string userId { get; set; }
 
 	private IEnumerable<CartLineItem> CartLineItems { get; set; } = new List<CartLineItem>();
