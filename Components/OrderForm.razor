@@ -1,0 +1,72 @@
+﻿@inject AuthenticationStateProvider _authStateProvider
+
+<div class="card">
+	<div class="card-header text-success text-center display-6">
+		Pickup Details
+	</div>
+	<EditForm Model="Order" FormName="OrderForm" OnValidSubmit="CreateOrder">
+
+		<div class="card-body">
+			<div class="form-group">
+				<label>Name</label>
+				<InputText @bind-Value="Order.Name" class="form-control"/>
+				<ValidationMessage For="@(() => Order.Name)" />
+			</div>
+			<div class="form-group">
+				<label>Email</label>
+				<InputText @bind-Value="Order.Email" class="form-control" />
+				<ValidationMessage For="@(() => Order.Email)" />
+			</div>
+			<div class="form-group">
+				<label>Phone</label>
+				<InputText @bind-Value="Order.PhoneNumber" class="form-control" />
+				<ValidationMessage For="@(() => Order.PhoneNumber)" />
+			</div>
+
+			<div class="card mt-4 bg-light">
+				<div class="card-body">
+					<h4>
+						Grand Total: @CartTotal
+					</h4>
+					<h4>
+						No. of Items: @CartItemCount
+					</h4>
+				</div>
+
+			</div>
+		</div>
+		<button class="btn btn-success m-4">
+			Looks Good? Place Order!
+		</button>
+	</EditForm>
+</div>
+
+@code {
+	[SupplyParameterFromForm]
+	public Order Order { get; set; }
+
+	[CascadingParameter]
+	public string userId { get; set; }
+
+	[Parameter]
+	public IEnumerable<CartLineItem> CartLineItems { get; set; }
+
+	private string CartTotal { get { return CartLineItems.Sum(c => c.Total).ToString("C", CultureInfo.GetCultureInfo("en-us")); } }
+
+	private int CartItemCount { get { return CartLineItems.Sum(c => c.Count); } }
+
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await _authStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		Order.Email = user.FindFirst(u => u.Type.Contains("email"))?.Value;
+		Order.UserId = userId;
+		Order.StatusId = (int)OrderStatusEnum.Pending;
+		Order.OrderKey = Guid.NewGuid().ToString();
+	}
+
+	public void CreateOrder()
+	{
+		throw new NotImplementedException();
+	}
+}

@@ -9,6 +9,9 @@ namespace Yum.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<CartLineItem> CartLineItems { get; set; }
+        public DbSet<OrderStatus> OrderStatuses { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -18,6 +21,13 @@ namespace Yum.Data
                 new Category { Id = 1, Name = "Appetizer" },
                 new Category { Id = 2, Name = "Entree" },
                 new Category { Id = 3, Name = "Dessert" }
+            );
+
+            builder.Entity<OrderStatus>().HasData(
+                new OrderStatus { Id = 1, Name = "Pending" },
+                new OrderStatus { Id = 2, Name = "Ready" },
+                new OrderStatus { Id = 3, Name = "Completed" },
+                new OrderStatus { Id = 4, Name = "Cancelled" }
             );
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Yum.Data
 {
@@ -13,13 +14,18 @@ namespace Yum.Data
         [Required]
         public DateTime OrderDate { get; set; }
         [Required]
-        public string Status { get; set; }
-        [Required]
         public string Name { get; set; }
         [Required]
         [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; }
         [Required]
         public string Email { get; set; }
+        public int StatusId { get; set; }
+        [ForeignKey("StatusId")]
+        public OrderStatus Status { get; set; }
+        [Required]
+        public string OrderKey { get; set; }
+
+        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
 }

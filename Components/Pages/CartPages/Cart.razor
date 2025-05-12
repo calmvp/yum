@@ -1,6 +1,5 @@
 ﻿@page "/cart"
 @using System.Globalization
-@inject AuthenticationStateProvider _authStateProvider
 @inject IJSRuntime _jsRuntime
 @inject NavigationManager _navManager
 @inject IProductRepository _productRepo
@@ -13,58 +12,35 @@
 }
 else
 {
-	<div class="row w-100">
-		<div class="col-lg-6 col-12">
-			<div class="container p-4 m-2">
-				<h4 class="text-center text-success display-6">
-					Cart Summary
-				</h4>
-				@foreach (var item in CartLineItems)
-				{
-					<CartItem LineItem="@item" OnItemUpdate="UpdateCartLineItem"></CartItem>
-				}
+	@if (CartLineItems.Any())
+	{
+
+
+		<div class="row w-100">
+			<div class="col-lg-6 col-12">
+				<div class="container p-4 m-2">
+					<h4 class="text-center text-success display-6">
+						Cart Summary
+					</h4>
+					@foreach (var item in CartLineItems)
+					{
+						<CartItem LineItem="@item" OnItemUpdate="UpdateCartLineItem"></CartItem>
+					}
+				</div>
+			</div>
+			<div class="col-lg-6 col-12 p-4">
+				<OrderForm CartLineItems="@CartLineItems"></OrderForm>
 			</div>
 		</div>
-		<div class="col-lg-6 col-12 p-4">
-			<div class="card">
-				<div class="card-header text-success text-center display-6">
-					Pickup Details
-				</div>
-				<div class="card-body">
-					<form>
-						<div class="form-group">
-							<label>Name</label>
-							<input type="text" class="form-control" />
-						</div>
-						<div class="form-group">
-							<label>Email</label>
-							<input type="text" class="form-control" />
-						</div>
-						<div class="form-group">
-							<label>Phone</label>
-							<input type="text" class="form-control" />
-						</div>
-
-					</form>
-					<div class="card mt-4 bg-light">
-						<div class="card-body">
-							<h4>
-								Grand Total: @CartTotal
-							</h4>
-							<h4>
-								No. of Items: @CartItemCount
-							</h4>
-						</div>
-
-					</div>
-				</div>
-
-				<button class="btn btn-success m-4">
-					Looks Good? Place Order!
-				</button>
+	}
+	else
+	{
+		<div class="p-4">
+			<div class="alert alert-warning">
+				Your cart is empty!
 			</div>
 		</div>
-	</div>
+	}
 }
 
 @code {
@@ -78,11 +54,8 @@ else
 
 	private bool Loading { get; set; } = true;
 
-	private string CartTotal { get { return CartLineItems.Sum(c => c.Total).ToString("C", CultureInfo.GetCultureInfo("en-us")); } }
 
-	private int CartItemCount { get { return CartLineItems.Sum(c => c.Count ); }}
-
-	protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
 		if (!isAuthenticated)
 		{

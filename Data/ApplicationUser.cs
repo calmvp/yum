@@ -6,5 +6,4 @@ namespace Yum.Data
     public class ApplicationUser : IdentityUser
     {
     }
-
 }
