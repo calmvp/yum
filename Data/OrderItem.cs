@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Yum.Data
 {
@@ -12,6 +13,7 @@ namespace Yum.Data
         [Required]
         public string ProductName { get; set; }
         public int CartLineItemId { get; set; }
+        [ForeignKey("CartLineItemId")]
         public CartLineItem CartLineItem { get; set; }
     }
 }

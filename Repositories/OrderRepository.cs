@@ -33,20 +33,20 @@ namespace Yum.Repositories
             }
         }
 
-        public async Task<Order> GetByIdAsync(int orderId)
+        public async Task<Order> GetByKeyAsync(string key)
         {
-            return await _db.Orders.Include(u => u.Items).Include(u => u.Status).FirstOrDefaultAsync(u => u.Id == orderId);
+            return await _db.Orders.Include(u => u.Items).ThenInclude(x => x.CartLineItem).Include(u => u.Status).FirstOrDefaultAsync(u => u.OrderKey == key);
         }
 
-        public async Task<Order> UpdateOrderStatusAsync(int orderId, OrderStatusEnum status)
+        public async Task<bool> UpdateOrderStatusAsync(string key, OrderStatusEnum status)
         {
-            var order = await _db.Orders.FirstOrDefaultAsync(u => u.Id == orderId);
+            var order = await _db.Orders.FirstOrDefaultAsync(u => u.OrderKey == key);
             if (order is not null)
             {
                 order.StatusId = (int)status;
-                await _db.SaveChangesAsync();
+                return await _db.SaveChangesAsync() > 0;
             }
-            return order;
+            return false;
         }
     }
 }

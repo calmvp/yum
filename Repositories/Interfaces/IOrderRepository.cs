@@ -6,8 +6,8 @@ namespace Yum.Repositories.Interfaces
     public interface IOrderRepository
     {
         public Task<Order> CreateAsync(Order order);
-        public Task<Order> GetByIdAsync(int id);
+        public Task<Order> GetByKeyAsync(string key);
         public Task<IEnumerable<Order>> GetAllAsync(string? userId = null);
-        public Task<Order> UpdateOrderStatusAsync(int orderId, OrderStatusEnum status);
+        public Task<bool> UpdateOrderStatusAsync(string key, OrderStatusEnum status);
     }
 }

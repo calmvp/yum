@@ -22,7 +22,9 @@
             <CascadingValue Value="@isAuthenticated">
                 <CascadingValue Name="userId" Value="@userId">
                     <CascadingValue Name="email" Value="@email">
-                    @Body
+                        <CascadingValue Name="isAdmin" Value="@isAdmin">
+                        @Body
+                        </CascadingValue>
                     </CascadingValue> 
                 </CascadingValue>
             </CascadingValue>

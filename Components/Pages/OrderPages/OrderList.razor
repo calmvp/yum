@@ -1,98 +1,116 @@
-﻿@page "/order/list"
+﻿@page "/orders/list"
 @using System.Globalization
 @inject IJSRuntime _jsRuntime
 @inject IOrderRepository _orderRepo
 
 @if (Loading)
 {
-    <_Loading></_Loading>
+    <Loading></Loading>
 }
 else
 {
-    <_BootstrapModal ModalId="@DELETE_MODAL_ID"
-                     ModalTitle="Confirm Order Deletion"
-                     OnConfirm="@(() => ConfirmDelete())"
-                     ConfirmButtonStyle="btn-danger"
-                     ConfirmText="Delete">
-        <p>Are you sure you want to delete this category?</p>
-    </_BootstrapModal>
-    <div class="card shadow border-0 mt-4">
-        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <h2 class="text-white py-2">Order List</h2>
+    @if (Orders.Any())
+    {
+        <_BootstrapModal ModalId="@DELETE_MODAL_ID"
+        ModalTitle="Confirm Order Deletion"
+        OnConfirm="@(() => ConfirmDelete())"
+        ConfirmButtonStyle="btn-danger"
+        ConfirmText="Delete">
+            <p>Are you sure you want to delete this category?</p>
+        </_BootstrapModal>
+        <div class="card shadow border-0 mt-4">
+            <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h2 class="text-white py-2">Order List</h2>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card-body p-4">
-            <div class="row pb-3">
-                <div class="col-12 text-end">
-                    <a href="categories/create" class="btn btn-lg btn-secondary" style="width:250px;">
-                        <i class="bi bi-plus-square"></i>
-                        Add New Order
-                    </a>
+            <div class="card-body p-4">
+                <div class="row pb-3">
+                    <div class="col-12 text-end">
+                        <a href="categories/create" class="btn btn-lg btn-secondary" style="width:250px;">
+                            <i class="bi bi-plus-square"></i>
+                            Add New Order
+                        </a>
+                    </div>
                 </div>
-            </div>
-            @if (Orders.Any())
-            {
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Phone Number</th>
-                            <th>Email</th>
-                            <th>Order Total</th>
-                            <th>Order Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var order in Orders)
-                        {
+                @if (Orders.Any())
+                {
+                    <table class="table table-bordered table-striped">
+                        <thead>
                             <tr>
-                                <td>
-                                    @order.OrderKey
-                                </td>
-                                <td>
-                                    @order.Name
-                                </td>
-                                <td>
-                                    @order.PhoneNumber
-                                </td>
-                                <td>
-                                    @order.Email
-                                </td>
-                                <td>
-                                    @order.OrderTotal.ToString("C", CultureInfo.GetCultureInfo("en-us"))
-                                </td>
-                                <td>
-                                    @order.OrderDate.ToString("MMMM dd, yyyy");
-                                </td>
-                                <td>
-                                    @order.Status.Name
-                                </td>
-                                <td>
-                                    <a href="@($"categories/update/{order.Id}")" class="btn btn-primary">
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Phone Number</th>
+                                <th>Email</th>
+                                <th>Order Total</th>
+                                <th>Order Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Orders)
+                            {
+                                <tr>
+                                    <td>
+                                        @order.OrderKey
+                                    </td>
+                                    <td>
+                                        @order.Name
+                                    </td>
+                                    <td>
+                                        @order.PhoneNumber
+                                    </td>
+                                    <td>
+                                        @order.Email
+                                    </td>
+                                    <td>
+                                        @order.OrderTotal.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+                                    </td>
+                                    <td>
+                                        @order.OrderDate.ToString("MMMM dd, yyyy");
+                                    </td>
+                                    <td>
+                                        @order.Status.Name
+                                    </td>
+                                    <td>
+                                        <a href="@($"orders/details/{order.OrderKey}")" class="btn btn-primary">
+                                            <i class="bi bi-pencil-square"></i> Details
+                                        </a>
+                                        @* <a href="@($"categories/update/{order.Id}")" class="btn btn-primary">
                                         <i class="bi bi-pencil-square"></i>
                                         Edit
                                     </a>
                                     <button class="btn btn-danger" @onclick="@(() => OpenDeleteModal(order.Id))">
                                         <i class="bi bi-trash3"></i>
                                         Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
+                                    </button> *@
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
 
-                </table>
-            }
+                    </table>
+                }
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="p-4">
+            <div class="alert alert-warning">
+                No current orders
+            </div>
+        </div>
+    }
 }
 
 @code {
+    [CascadingParameter(Name="isAdmin")]
+    public bool isAdmin { get; set; }
+    [CascadingParameter(Name="userId")]
+    public string userId { get; set; }
     private const string DELETE_MODAL_ID = "deleteModal";
     public bool Loading { get; set; } = true;
     private IEnumerable<Order> Orders { get; set; } = new List<Order>();
@@ -102,15 +120,28 @@ else
     {
         if (firstRender)
         {
-            Orders = await GetOrdersAsync();
+            if (isAdmin)
+            {
+                Orders = await GetOrdersAsync();
+            }
+            else
+            {
+                Orders = await GetOrdersAsync(userId);
+            }
+
             Loading = false;
             StateHasChanged();
         }
     }
 
-    private async Task<IEnumerable<Order>> GetOrdersAsync()
+    private async Task<IEnumerable<Order>> GetOrdersAsync(string? userId = null)
     {
-        return await _orderRepo.GetAllAsync();
+        if (userId is null && isAdmin)
+        {
+            return await _orderRepo.GetAllAsync();
+        }
+
+        return await _orderRepo.GetAllAsync(userId);
     }
 
     private async Task OpenDeleteModal(int id)

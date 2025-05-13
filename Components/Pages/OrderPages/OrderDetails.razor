@@ -1,0 +1,102 @@
+﻿@page "/orders/details/{key}"
+@using System.Globalization
+@inject IOrderRepository _orderRepo;
+@inject IJSRuntime _jsRuntime;
+
+@if (Loading)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="container my-5 mx-auto p-5 w-100" style="max-width: 950px;">
+        <div class="card" style="max-width: 750px;">
+            <div class="pt-3 text-success text-center">
+                <span class="h4"> ORDER DETAILS</span>
+            </div>
+
+            <hr />
+            <div class="px-3">
+                <p>Order Id: @Order.OrderKey</p>
+                <p>Name: @Order.Name</p>
+                <p>Email: @Order.Email</p>
+                <p>Phone: @Order.PhoneNumber</p>
+                <p>Order Status: @Order.Status.Name</p>
+            </div>
+            <hr />
+            <div class="card-body">
+                <h4 class="text-success">Menu Items</h4>
+
+                @foreach (var item in Order.Items)
+                {
+                    <OrderLineItem Item="@item"></OrderLineItem>
+                }
+
+                <hr />
+                <h4 class="text-success text-end">
+                    @Order.OrderTotal.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+                </h4>
+                <hr />
+
+                <div class="row">
+                    <div class="col-5">
+                        <a href="orders/list" class="btn btn-secondary  m-2 p-2" style="width:150px;">Back to Orders</a>
+                    </div>
+                    <div class="col-7 text-end">
+                        @if (isAdmin && Order.StatusId != (int)OrderStatusEnum.Cancelled && Order.StatusId != (int)OrderStatusEnum.Completed)
+                        {
+                            <button class="btn btn-danger m-2 p-2" style="width:150px;" @onclick="() => UpdateOrderStatus(OrderStatusEnum.Cancelled)">Cancel Order</button>
+                            @if (Order.StatusId == (int)OrderStatusEnum.Pending)
+                            {
+                                <button class="btn btn-primary m-2 p-2" style="width:150px;" @onclick="() => UpdateOrderStatus(OrderStatusEnum.Ready)">Ready for Pickup</button>
+                            }
+                            @if (Order.StatusId == (int)OrderStatusEnum.Ready)
+                            {
+                                <button class="btn btn-success m-2 p-2" style="width:150px;" @onclick="() => UpdateOrderStatus(OrderStatusEnum.Completed)">Complete Order</button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter(Name ="isAdmin")]
+    public bool isAdmin { get; set; }
+
+    [Parameter]
+    public string key { get; set; }
+
+    private bool Loading { get; set; } = true;
+
+    private Order Order { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Order = await _orderRepo.GetByKeyAsync(key);
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateOrderStatus(OrderStatusEnum newStatus)
+    {
+        Loading = true;
+        var orderUpdated = await _orderRepo.UpdateOrderStatusAsync(Order.OrderKey, newStatus);
+
+        if (orderUpdated)
+        {
+            Order = await _orderRepo.GetByKeyAsync(Order.OrderKey);
+            await _jsRuntime.ToastrSuccess($"Status updated to {Order.Status.Name} successfully");
+        }
+        else
+        {
+            await _jsRuntime.ToastrError("Status failed to update");
+        }
+        Loading = false;
+    }
+}

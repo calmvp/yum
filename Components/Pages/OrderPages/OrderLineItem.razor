@@ -1,0 +1,20 @@
+﻿@using System.Globalization
+
+<div class="d-flex">
+    <div class="d-flex w-100 justify-content-between">
+        <p>
+            &nbsp; -- @Item.ProductName
+        </p>
+        <p>
+            @Item.Price.ToString("C", CultureInfo.GetCultureInfo("en-us"))
+        </p>
+    </div>
+    <div class="ps-4">
+        @((Item.Price * Item.CartLineItem.Count).ToString("C", CultureInfo.GetCultureInfo("en-us")))
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public OrderItem Item { get; set; }
+}
