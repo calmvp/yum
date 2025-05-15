@@ -2,6 +2,7 @@
 @using System.Globalization
 @inject IJSRuntime _jsRuntime
 @inject IOrderRepository _orderRepo
+@inject NavigationManager _navManager
 
 @if (Loading)
 {
@@ -11,13 +12,6 @@ else
 {
     @if (Orders.Any())
     {
-        <_BootstrapModal ModalId="@DELETE_MODAL_ID"
-        ModalTitle="Confirm Order Deletion"
-        OnConfirm="@(() => ConfirmDelete())"
-        ConfirmButtonStyle="btn-danger"
-        ConfirmText="Delete">
-            <p>Are you sure you want to delete this category?</p>
-        </_BootstrapModal>
         <div class="card shadow border-0 mt-4">
             <div class="card-header bg-black bg-gradient m-lg-0 py-3">
                 <div class="row">
@@ -27,71 +21,26 @@ else
                 </div>
             </div>
             <div class="card-body p-4">
-                <div class="row pb-3">
-                    <div class="col-12 text-end">
-                        <a href="categories/create" class="btn btn-lg btn-secondary" style="width:250px;">
-                            <i class="bi bi-plus-square"></i>
-                            Add New Order
-                        </a>
-                    </div>
-                </div>
                 @if (Orders.Any())
                 {
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Phone Number</th>
-                                <th>Email</th>
-                                <th>Order Total</th>
-                                <th>Order Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var order in Orders)
-                            {
-                                <tr>
-                                    <td>
-                                        @order.OrderKey
-                                    </td>
-                                    <td>
-                                        @order.Name
-                                    </td>
-                                    <td>
-                                        @order.PhoneNumber
-                                    </td>
-                                    <td>
-                                        @order.Email
-                                    </td>
-                                    <td>
-                                        @order.OrderTotal.ToString("C", CultureInfo.GetCultureInfo("en-us"))
-                                    </td>
-                                    <td>
-                                        @order.OrderDate.ToString("MMMM dd, yyyy");
-                                    </td>
-                                    <td>
-                                        @order.Status.Name
-                                    </td>
-                                    <td>
-                                        <a href="@($"orders/details/{order.OrderKey}")" class="btn btn-primary">
-                                            <i class="bi bi-pencil-square"></i> Details
-                                        </a>
-                                        @* <a href="@($"categories/update/{order.Id}")" class="btn btn-primary">
-                                        <i class="bi bi-pencil-square"></i>
-                                        Edit
-                                    </a>
-                                    <button class="btn btn-danger" @onclick="@(() => OpenDeleteModal(order.Id))">
-                                        <i class="bi bi-trash3"></i>
-                                        Delete
-                                    </button> *@
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-
-                    </table>
+                    <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                                    Data="@Orders" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" SelectionMode="DataGridSelectionMode.Single">
+                        <Columns>
+                            <RadzenDataGridColumn Property="OrderKey" Filterable="false" Title="ID" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="Name" Title="Name" Frozen="true" Width="160px" />
+                            <RadzenDataGridColumn Property="PhoneNumber" Title="Phone Number" Width="120px" />
+                            <RadzenDataGridColumn Property="Email" Title="Email" Width="200px" />
+                            <RadzenDataGridColumn Property="OrderTotal" Title="Order Total" FormatString="{0:C}" Width="120px" />
+                            <RadzenDataGridColumn Property="OrderDate" Title="Order Date" FormatString="{0:d}" Width="160px" />
+                            <RadzenDataGridColumn Property="Status" Title="Status" Width="160px" />
+                            <RadzenDataGridColumn Title="Action" Sortable="false" Filterable="false" Width="80px" TextAlign="TextAlign.Center" >
+                                <Template Context="order">
+                                    <RadzenButton Shade="Shade.Lighter" Text="Details" ButtonStyle="ButtonStyle.Primary"
+                                              Click="@(()=>_navManager.NavigateTo($"orders/details/{order.OrderKey}"))"></RadzenButton>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
                 }
             </div>
         </div>

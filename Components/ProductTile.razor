@@ -1,7 +1,7 @@
 ﻿@using System.Globalization
-@inject ICartLineItemRepository _cartLineItemRepo
 @inject NavigationManager _navManager
 @inject IJSRuntime _jsRuntime
+@inject ICartService _cartService
 
 <div class="col-12 col-md-6 col-lg-4 pe-3 mb-5">
     <div class="card">
@@ -54,7 +54,7 @@
         }
         else
         {
-            var result = await _cartLineItemRepo.UpdateCartAsync(userId, Product.Id, 1);
+            var result = await _cartService.UpdateCartAsync(userId, Product.Id, 1);
 
             if (result)
             {

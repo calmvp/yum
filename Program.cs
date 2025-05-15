@@ -8,6 +8,7 @@ using Yum.Repositories;
 using Yum.Repositories.Interfaces;
 using Yum.Services;
 using Yum.Services.Interfaces;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,8 +44,11 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICartLineItemRepository, CartLineItemRepository>();
 builder.Services.AddTransient<IProductService, ProductService>();
-builder.Services.AddScoped<StateContainerService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<SharedStateService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddTransient<ICartService, CartService>();
+builder.Services.AddRadzenComponents();
 
 var app = builder.Build();
 

@@ -1,4 +1,7 @@
-﻿<nav class="navbar navbar-expand-md navbar-dark bg-dark pb-4 pt-4">
+﻿@inject SharedStateService _sharedStateService
+@inject ICartLineItemRepository _cartLineItemRepo
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark pb-4 pt-4">
 	<div class="container-fluid">
 		<a class="navbar-brand" href="">
 			<img src="lib/images/Logo.png" alt="Bootstrap" width="30" height="24">
@@ -19,7 +22,7 @@
 					<Authorized>	
 						<li class="nav-item mx-2">
 							<NavLink class="nav-link" href="/cart">
-								<span class="bi bi-cart3" aria-hidden="true"></span> Cart
+								<span class="bi bi-cart3" aria-hidden="true"></span> Cart (@_sharedStateService.TotalCartCount)
 							</NavLink>
 						</li>
 						<li class="nav-item mx-2">
@@ -70,4 +73,28 @@
 {
 	[Parameter]
 	public string email { get; set; }
+
+	[Parameter]
+	public string userId { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		_sharedStateService.OnCartCountChange += OnSharedCartCountChange;
+		_sharedStateService.TotalCartCount = await GetInitialCount();
+	}
+
+	private void OnSharedCartCountChange()
+	{
+		InvokeAsync(StateHasChanged);
+	}
+
+	public async Task<int> GetInitialCount()
+	{
+		return await _cartLineItemRepo.GetActiveCartItemCount(userId);
+	}
+
+	public void Dispose()
+	{
+		_sharedStateService.OnCartCountChange -= OnSharedCartCountChange;
+	}
 }

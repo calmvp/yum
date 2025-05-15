@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
     <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 
@@ -23,6 +24,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="/lib/js/notification.js"></script>
     <script src="/lib/js/modal.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
 </body>
 
 </html>

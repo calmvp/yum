@@ -5,6 +5,7 @@
 @inject IProductRepository _productRepo
 @inject ICategoryRepository _categoryRepo
 @inject ICartLineItemRepository _cartLineItemRepo
+@inject ICartService _cartService
 
 @if (Loading)
 {
@@ -78,7 +79,7 @@ else
 
 	public async Task UpdateCartLineItem((int productId, int increment) args)
 	{
-		var result = await _cartLineItemRepo.UpdateCartAsync(userId, args.productId, args.increment);
+		var result = await _cartService.UpdateCartAsync(userId, args.productId, args.increment);
 
 		if (result)
 		{
