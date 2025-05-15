@@ -5,7 +5,7 @@
 <div class="page">
     <AuthorizeView Roles="@Roles.Admin">
         <div class="sidebar">
-            <NavMenu />
+            <AdminNavBar />
         </div>
     </AuthorizeView>
 
@@ -51,7 +51,7 @@
         await SetUserContextAsync();
     }
 
-    private async Task<bool> GetNavBarVisibleAsync(ClaimsPrincipal user)
+    private bool GetNavBarVisible(ClaimsPrincipal user)
     {
         if (!isAuthenticated)
             return true;
@@ -86,6 +86,6 @@
             userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
             email = user.FindFirst(u => u.Type.Contains("email"))?.Value;
         }
-        showNavBar = await GetNavBarVisibleAsync(user);
+        showNavBar = GetNavBarVisible(user);
     }
 }

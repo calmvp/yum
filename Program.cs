@@ -26,11 +26,22 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
+    .AddMicrosoftAccount(options =>
+    {
+        options.ClientId = builder.Configuration.GetValue<string>("Authentication:Microsoft:ClientId");
+        options.ClientSecret = builder.Configuration.GetValue<string>("Authentication:Microsoft:ClientSecret");
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration.GetValue<string>("Authentication:Google:ClientId");
+        options.ClientSecret = builder.Configuration.GetValue<string>("Authentication:Google:ClientSecret");
+    })
     .AddIdentityCookies();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString),
+    ServiceLifetime.Transient);
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)

@@ -98,28 +98,4 @@ else
         DeleteOrderId = id;
         await _jsRuntime.OpenModal(DELETE_MODAL_ID);
     }
-
-    private async Task ConfirmDelete()
-    {
-        // Loading = true;
-        // await _jsRuntime.CloseModal(DELETE_MODAL_ID);
-        // if (DeleteOrderId > 0)
-        // {
-        //     var res = await _categoryRepo.DeleteAsync(DeleteOrderId);
-        //     if (res)
-        //     {
-        //         await _jsRuntime.ToastrSuccess("Order deleted successfully");
-        //     }
-        //     else
-        //     {
-        //         await _jsRuntime.ToastrError("Order delete failed");
-        //     }
-
-
-        //     Categories = await GetCategories();
-        // }
-
-        // DeleteOrderId = 0;
-        // Loading = false;
-    }
 }

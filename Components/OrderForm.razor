@@ -70,7 +70,7 @@
 
 	public async Task CreateOrderAsync()
 	{
-		OnLoading.InvokeAsync(true);
+		await OnLoading.InvokeAsync(true);
 		OrderRequest.Items = CartLineItems;
 		var createdOrder = await _orderService.CreateOrderAsync(userId, OrderRequest);
 		_navManager.NavigateTo($"/order/confirmation/{createdOrder.OrderKey}");

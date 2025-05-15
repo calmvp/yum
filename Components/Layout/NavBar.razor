@@ -37,12 +37,12 @@
 				<AuthorizeView>
 					<Authorized>
 						<li class="nav-item">
-							<button class="nav-link active me-2" style="cursor: pointer; background: transparent; border: 0px;">
+							<NavLink class="nav-link p-2" href="Account/Manage">
 								Welcome, @email
-							</button>
+							</NavLink>
 						</li>
 						<li class="nav-item">
-							<form action="" method="post">
+							<form @formname="logoutForm" action="Account/Logout" method="post">
 								<AntiforgeryToken />
 								<input type="hidden" name="ReturnUrl" value="Account/Login" />
 								<button type="submit" class="nav-link btn btn-success">

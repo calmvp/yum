@@ -54,7 +54,7 @@ else
 	private bool Loading { get; set; } = true;
 
 
-	protected override async Task OnInitializedAsync()
+	protected override void OnInitialized()
 	{
 		if (!isAuthenticated)
 		{
@@ -102,7 +102,7 @@ else
 		StateHasChanged();
 	}
 
-	public async Task SetLoading(bool loading)
+	public void SetLoading(bool loading)
 	{
 		Loading = loading;
 	}
