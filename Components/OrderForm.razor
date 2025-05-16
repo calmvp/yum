@@ -72,7 +72,10 @@
 	{
 		await OnLoading.InvokeAsync(true);
 		OrderRequest.Items = CartLineItems;
-		var createdOrder = await _orderService.CreateOrderAsync(userId, OrderRequest);
-		_navManager.NavigateTo($"/order/confirmation/{createdOrder.OrderKey}");
+		var sessionUrl = await _orderService.CreateOrderAsync(userId, OrderRequest);
+		if (sessionUrl is not null)
+		{
+			_navManager.NavigateTo(sessionUrl);
+		}
 	}
 }

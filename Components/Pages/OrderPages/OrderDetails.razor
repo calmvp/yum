@@ -46,7 +46,7 @@ else
                         @if (isAdmin && Order.StatusId != (int)OrderStatusEnum.Cancelled && Order.StatusId != (int)OrderStatusEnum.Completed)
                         {
                             <button class="btn btn-danger m-2 p-2" style="width:150px;" @onclick="() => UpdateOrderStatus(OrderStatusEnum.Cancelled)">Cancel Order</button>
-                            @if (Order.StatusId == (int)OrderStatusEnum.Pending)
+                            @if (Order.StatusId == (int)OrderStatusEnum.Approved)
                             {
                                 <button class="btn btn-primary m-2 p-2" style="width:150px;" @onclick="() => UpdateOrderStatus(OrderStatusEnum.Ready)">Ready for Pickup</button>
                             }

@@ -25,7 +25,8 @@ namespace Yum.Data
         public OrderStatus Status { get; set; }
         [Required]
         public string OrderKey { get; set; }
-
+        public string? SessionId { get; set; }
+        public string? PaymentIntentId { get; set; }
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
 }

@@ -15,5 +15,7 @@ namespace Yum.Data
         public int CartLineItemId { get; set; }
         [ForeignKey("CartLineItemId")]
         public CartLineItem CartLineItem { get; set; }
+        [NotMapped]
+        public int ItemCount { get; set; }
     }
 }

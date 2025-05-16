@@ -27,7 +27,8 @@ namespace Yum.Data
                 new OrderStatus { Id = 1, Name = "Pending" },
                 new OrderStatus { Id = 2, Name = "Ready" },
                 new OrderStatus { Id = 3, Name = "Completed" },
-                new OrderStatus { Id = 4, Name = "Cancelled" }
+                new OrderStatus { Id = 4, Name = "Cancelled" },
+                new OrderStatus { Id = 5, Name = "Approved" }
             );
         }
     }

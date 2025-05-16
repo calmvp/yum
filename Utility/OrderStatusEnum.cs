@@ -5,6 +5,7 @@
         Pending = 1,
         Ready,
         Completed,
-        Cancelled
+        Cancelled,
+        Approved
     }
 }

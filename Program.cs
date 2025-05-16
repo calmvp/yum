@@ -9,6 +9,8 @@ using Yum.Repositories.Interfaces;
 using Yum.Services;
 using Yum.Services.Interfaces;
 using Radzen;
+using System.Configuration;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,14 +56,17 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICartLineItemRepository, CartLineItemRepository>();
-builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddTransient<IProductService, Yum.Services.ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<SharedStateService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddTransient<ICartService, CartService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddRadzenComponents();
 
 var app = builder.Build();
+
+StripeConfiguration.ApiKey = builder.Configuration.GetValue<string>("StripeApiKey");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

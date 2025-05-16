@@ -5,6 +5,6 @@ namespace Yum.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<Order> CreateOrderAsync(string userId, CreateOrderRequest request);
+        Task<string> CreateOrderAsync(string userId, CreateOrderRequest request);
     }
 }

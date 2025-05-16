@@ -38,12 +38,21 @@ namespace Yum.Repositories
             return await _db.Orders.Include(u => u.Items).ThenInclude(x => x.CartLineItem).Include(u => u.Status).FirstOrDefaultAsync(u => u.OrderKey == key);
         }
 
-        public async Task<bool> UpdateOrderStatusAsync(string key, OrderStatusEnum status)
+        public async Task<Order> GetBySessionIdAsync(string sessionId)
+        {
+            return await _db.Orders.Include(u => u.Items).ThenInclude(x => x.CartLineItem).Include(u => u.Status).FirstOrDefaultAsync(u => u.SessionId == sessionId);
+        }
+
+        public async Task<bool> UpdateOrderStatusAsync(string key, OrderStatusEnum status, string? paymentIntentId = null)
         {
             var order = await _db.Orders.FirstOrDefaultAsync(u => u.OrderKey == key);
             if (order is not null)
             {
                 order.StatusId = (int)status;
+                if (!string.IsNullOrEmpty(paymentIntentId))
+                {
+                    order.PaymentIntentId = paymentIntentId;
+                }
                 return await _db.SaveChangesAsync() > 0;
             }
             return false;

@@ -10,7 +10,8 @@ namespace Yum.Services.Extensions
             {
                 Price = Decimal.ToDouble(lineItem.Product.Price),
                 ProductName = lineItem.Product.Name,
-                CartLineItemId = lineItem.Id
+                CartLineItemId = lineItem.Id,
+                ItemCount = lineItem.Count
             };
         }
     }

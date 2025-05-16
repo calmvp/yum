@@ -1,16 +1,33 @@
-﻿@page "/order/confirmation/{orderId}";
-@inject SharedStateService _stateContainerService
+﻿@page "/order/confirmation/{sessionId}"
+@inject IPaymentService _paymentService
+@inject ICartLineItemRepository _cartLineItemRepo
 
-<div class="text-center">
-    <h1 class="pt-4 text-success">You are one step closer to delicious food!</h1>
-    <p>Your order is confirmed! Please note your order ID for any questions. </p>
-    <p>Order ID: <b>@orderId</b></p>
-    <hr />
-    <img src="lib/images/lawn_leaf.jpg" width="40%" />
-    <hr />
-</div>
+
+@if (Loading)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="text-center">
+        <h1 class="pt-4 text-success">You are one step closer to delicious food!</h1>
+        <p>Your order is confirmed! Please note your order ID for any questions. </p>
+        <p>Order ID: <b>@order.OrderKey</b></p>
+        <hr />
+        <img src="lib/images/lawn_leaf.jpg" width="40%" />
+        <hr />
+    </div>
+}
 
 @code {
     [Parameter]
-    public string orderId { get; set; }
+    public string sessionId { get; set; }
+    private bool Loading { get; set; } = true;
+    private Order order { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await _paymentService.CheckPaymentStatusAndUpdateOrder(sessionId);
+        Loading = false;
+    }
 }
