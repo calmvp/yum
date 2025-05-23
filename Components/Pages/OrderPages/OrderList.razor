@@ -3,6 +3,9 @@
 @inject IJSRuntime _jsRuntime
 @inject IOrderRepository _orderRepo
 @inject NavigationManager _navManager
+@inject ApplicationDbContext _db
+@using Microsoft.EntityFrameworkCore
+
 
 @if (Loading)
 {
@@ -10,7 +13,7 @@
 }
 else
 {
-    @if (Orders.Any())
+    @if (OrdersQueryable.Count() > 0)
     {
         <div class="card shadow border-0 mt-4">
             <div class="card-header bg-black bg-gradient m-lg-0 py-3">
@@ -21,27 +24,24 @@ else
                 </div>
             </div>
             <div class="card-body p-4">
-                @if (Orders.Any())
-                {
-                    <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
-                                    Data="@Orders" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" SelectionMode="DataGridSelectionMode.Single">
-                        <Columns>
-                            <RadzenDataGridColumn Property="OrderKey" Filterable="false" Title="ID" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
-                            <RadzenDataGridColumn Property="Name" Title="Name" Frozen="true" Width="160px" />
-                            <RadzenDataGridColumn Property="PhoneNumber" Title="Phone Number" Width="120px" />
-                            <RadzenDataGridColumn Property="Email" Title="Email" Width="200px" />
-                            <RadzenDataGridColumn Property="OrderTotal" Title="Order Total" FormatString="{0:C}" Width="120px" />
-                            <RadzenDataGridColumn Property="OrderDate" Title="Order Date" FormatString="{0:d}" Width="160px" />
-                            <RadzenDataGridColumn Property="Status" Title="Status" Width="160px" />
-                            <RadzenDataGridColumn Title="Action" Sortable="false" Filterable="false" Width="80px" TextAlign="TextAlign.Center" >
-                                <Template Context="order">
-                                    <RadzenButton Shade="Shade.Lighter" Text="Details" ButtonStyle="ButtonStyle.Primary"
-                                              Click="@(()=>_navManager.NavigateTo($"orders/details/{order.OrderKey}"))"></RadzenButton>
-                                </Template>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGrid>
-                }
+                <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                Data="@OrdersQueryable" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" SelectionMode="DataGridSelectionMode.Single">
+                    <Columns>
+                        <RadzenDataGridColumn Property="OrderKey" Filterable="false" Title="ID" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                        <RadzenDataGridColumn Property="Name" Title="Name" Frozen="true" Width="160px" />
+                        <RadzenDataGridColumn Property="PhoneNumber" Title="Phone Number" Width="120px" />
+                        <RadzenDataGridColumn Property="Email" Title="Email" Width="200px" />
+                        <RadzenDataGridColumn Property="OrderTotal" Title="Order Total" FormatString="{0:C}" Width="120px" />
+                        <RadzenDataGridColumn Property="OrderDate" Title="Order Date" FormatString="{0:d}" Width="160px" />
+                        <RadzenDataGridColumn Property="Status" Title="Status" Width="160px" />
+                        <RadzenDataGridColumn Title="Action" Sortable="false" Filterable="false" Width="80px" TextAlign="TextAlign.Center" >
+                            <Template Context="order">
+                                <RadzenButton Shade="Shade.Lighter" Text="Details" ButtonStyle="ButtonStyle.Primary"
+                                Click="@(()=>_navManager.NavigateTo($"orders/details/{order.OrderKey}"))"></RadzenButton>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
             </div>
         </div>
     }
@@ -62,22 +62,26 @@ else
     public string userId { get; set; }
     private const string DELETE_MODAL_ID = "deleteModal";
     public bool Loading { get; set; } = true;
-    private IEnumerable<Order> Orders { get; set; } = new List<Order>();
     private int DeleteOrderId { get; set; }
+    private IQueryable<Order> OrdersQueryable;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (isAdmin)
+        {
+            OrdersQueryable = _orderRepo.GetOrders();
+        }
+        else
+        {
+            OrdersQueryable = _orderRepo.GetOrders(userId);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            if (isAdmin)
-            {
-                Orders = await GetOrdersAsync();
-            }
-            else
-            {
-                Orders = await GetOrdersAsync(userId);
-            }
-
             Loading = false;
             StateHasChanged();
         }

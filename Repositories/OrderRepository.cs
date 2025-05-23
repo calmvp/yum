@@ -33,6 +33,18 @@ namespace Yum.Repositories
             }
         }
 
+        public IQueryable<Order> GetOrders(string? userId = null)
+        {
+            if (userId is null)
+            {
+                return _db.Orders.Include(u => u.Items).Include(u => u.Status);
+            }
+            else
+            {
+                return _db.Orders.Include(u => u.Items).Include(u => u.Status).Where(u => u.UserId == userId);
+            }
+        }
+
         public async Task<Order> GetByKeyAsync(string key)
         {
             return await _db.Orders.Include(u => u.Items).ThenInclude(x => x.CartLineItem).Include(u => u.Status).FirstOrDefaultAsync(u => u.OrderKey == key);
