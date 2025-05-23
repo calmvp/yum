@@ -1,0 +1,170 @@
+﻿@inherits TestContext
+@using System.Security.Claims
+@using Yum.Components.Layout
+
+@code {
+    private IRenderedComponent<MainLayout> _cut;
+    private Mock<AuthenticationStateProvider> _mockAuthStateProvider;
+    private Fixture _fixture;
+    private ClaimsPrincipal SomeAdminUser;
+    private ClaimsPrincipal SomeCustomerUser;
+    private readonly string SomeUserId = "TestUserId";
+    private readonly string SomeUserEmail = "test@gmail.com";
+
+    public MainLayoutTests()
+    {
+        _mockAuthStateProvider = new Mock<AuthenticationStateProvider>();
+        _fixture = new Fixture();
+
+        var mockCartLineRepo = new Mock<ICartLineItemRepository>();
+        var mockSharedStateService = new Mock<SharedStateService>();
+
+        Services.AddScoped<ICartLineItemRepository>(_ => mockCartLineRepo.Object);
+        Services.AddScoped<SharedStateService>(_ => mockSharedStateService.Object);
+
+        SomeCustomerUser = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.Role, "customer")
+        }, "fake auth"));
+    }
+
+    [Fact]
+    public void DoesNotDisplayAdminNavBarToUnauthenticatedUser()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenAdminNavBarIsNotDisplayed();
+    }
+
+    [Fact]
+    public void DisplaysAnAdminNavBarToAdminUser()
+    {
+        GivenAuthenticatedAdminUser();
+        WhenRenderComponent();
+        ThenAdminNavBarIsDisplayed();
+    }
+
+    [Fact]
+    public void DoesNotDisplayNavBarToAdminUser()
+    {
+        GivenAuthenticatedAdminUser();
+        WhenRenderComponent();
+        ThenNavBarIsNotDisplayed();
+    }
+
+    [Fact]
+    public void DisplaysNavBarToCustomerUser()
+    {
+        GivenAuthenticatedCustomerUser();
+        WhenRenderComponent();
+        ThenNavBarIsDisplayed();
+    }
+
+    [Fact]
+    public void SetsIsAuthenticatedPropertyForUnauthenticatedUser()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenIsAuthenticatedIsFalse();
+    }
+
+    [Fact]
+    public void SetsIsAuthenticatedPropertyForAuthenticatedUser()
+    {
+        GivenAuthenticatedAdminUser();
+        WhenRenderComponent();
+        ThenIsAuthenticatedIsTrue();
+    }
+
+    [Fact]
+    public void SetsUserIdForAuthenticatedUser()
+    {
+        GivenAuthenticatedCustomerUser();
+        WhenRenderComponent();
+        ThenSetsUserId();
+    }
+
+    [Fact]
+    public void SetsUserEmailForAuthenticatedUser()
+    {
+        GivenAuthenticatedCustomerUser();
+        WhenRenderComponent();
+        ThenSetsEmail();
+    }
+
+    private void GivenUserNotAuthorized()
+    {
+        this.AddTestAuthorization();
+    }
+
+    private void GivenAuthenticatedAdminUser()
+    {
+        var authContext = this.AddTestAuthorization();
+        authContext.SetAuthorized("TestAdmin");
+        authContext.SetRoles("admin");
+    }
+
+    private void GivenAuthenticatedCustomerUser()
+    {
+        var authContext = this.AddTestAuthorization();
+        authContext.SetAuthorized("TestCustomer");
+        authContext.SetRoles("customer");
+        authContext.SetClaims(
+            new Claim(ClaimTypes.Email, SomeUserEmail),
+            new Claim(ClaimTypes.NameIdentifier, SomeUserId)
+        );
+    }
+
+    private void WhenRenderComponent()
+    {
+        _cut = RenderComponent<MainLayout>();
+    }
+
+    private void ThenAdminNavBarIsNotDisplayed()
+    {
+        var components = _cut.FindComponents<AdminNavBar>();
+        Assert.Equal(0, components.Count);
+    }
+
+    private void ThenAdminNavBarIsDisplayed()
+    {
+        var component = _cut.FindComponent<AdminNavBar>();
+        Assert.NotEqual(component, null);
+    }
+
+    private void ThenNavBarIsNotDisplayed()
+    {
+        var components = _cut.FindComponents<NavBar>();
+        Assert.Equal(0, components.Count);
+    }
+
+    private void ThenNavBarIsDisplayed()
+    {
+        var component = _cut.FindComponent<NavBar>();
+        Assert.NotEqual(component, null);
+    }
+
+    private void ThenIsAuthenticatedIsFalse()
+    {
+        var componentInstance = _cut.Instance;
+        Assert.False(componentInstance.isAuthenticated);
+    }
+
+    private void ThenIsAuthenticatedIsTrue()
+    {
+        var componentInstance = _cut.Instance;
+        Assert.True(componentInstance.isAuthenticated);
+    }
+
+    private void ThenSetsUserId()
+    {
+        var componentInstance = _cut.Instance;
+        Assert.Equal(SomeUserId, componentInstance.userId);
+    }
+
+    private void ThenSetsEmail()
+    {
+        var componentInstance = _cut.Instance;
+        Assert.Equal(SomeUserEmail, componentInstance.email);
+    }
+}

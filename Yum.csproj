@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Yum-5824c868-89b1-4f5e-b2c7-bf4afeb09bcb</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="YumTest\**" />
+    <Content Remove="YumTest\**" />
+    <EmbeddedResource Remove="YumTest\**" />
+    <None Remove="YumTest\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.5" />

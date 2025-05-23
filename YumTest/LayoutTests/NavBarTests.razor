@@ -1,0 +1,174 @@
+﻿@inherits TestContext
+@using Yum.Components.Layout
+
+@code {
+    private Mock<ICartLineItemRepository> _mockCartLineRepo;
+    private Mock<SharedStateService> _mockSharedStateService;
+    private IRenderedComponent<NavBar> _cut;
+    private string SomeUserEmail = "testguy@gmail.com";
+    private string SomeUserId = Guid.NewGuid().ToString();
+    private int SomeCartItemCount = 7;
+    private int SomeOtherCartItemCount = 6;
+
+    public NavBarTests()
+    {
+        _mockCartLineRepo = new Mock<ICartLineItemRepository>();
+        _mockSharedStateService = new Mock<SharedStateService>();
+
+        _mockCartLineRepo.Setup(m => m.GetActiveCartItemCount(SomeUserId)).ReturnsAsync(SomeCartItemCount);
+
+        Services.AddScoped<ICartLineItemRepository>(_ => _mockCartLineRepo.Object);
+        Services.AddScoped<SharedStateService>(_ => _mockSharedStateService.Object);
+    }
+
+    [Fact]
+    public void DisplaysARegisterNavLinkToUnauthorizedUser()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenContainsOneNavLinkWithHref("account/register");
+    }
+
+    [Fact]
+    public void DisplaysALoginNavLinkToUnauthorizedUser()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenContainsOneNavLinkWithHref("account/login");
+    }
+
+    [Fact]
+    public void DoesNotDisplayACartLinkToUnauthorizedUser()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenDoesNotContainNavLinkWithHref("/cart");
+    }
+
+    [Fact]
+    public void DoesNotDisplayAOrderListLinkToUnauthorizedUser()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenDoesNotContainNavLinkWithHref("/orders/list");
+    }
+
+    [Fact]
+    public void DisplaysACartLinkToAuthorizedUser()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponent();
+        ThenContainsOneNavLinkWithHref("/cart");
+    }
+
+    [Fact]
+    public void DisplaysAnOrderListLinkToAuthorizedUser()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponent();
+        ThenContainsOneNavLinkWithHref("/orders/list");
+    }
+
+    [Fact]
+    public void DisplaysTheAuthorizedUsersEmail()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponentWithUserEmail();
+        ThenDisplaysTheUserEmail();
+    }
+
+    [Fact]
+    public void DoesNotDisplayARegisterLinkToAnAuthorizedUser()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponent();
+        ThenDoesNotContainNavLinkWithHref("account/register");
+    }
+
+    [Fact]
+    public void DoesNotDisplayALoginLinkToAnAuthorizedUser()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponent();
+        ThenDoesNotContainNavLinkWithHref("account/login");
+    }
+
+    [Fact]
+    public void DisplaysAnAuthorizedUsersCartItemCount()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponent();
+        ThenDisplaysCartItemCount();
+    }
+
+    [Fact]
+    public void DisplaysAnUpdatedCartItemCount()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponent();
+        WhenCartCountChanges();
+        ThenDisplaysNewCartItemCount();
+    }
+
+    private void GivenUserNotAuthorized()
+    {
+        this.AddTestAuthorization();
+    }
+
+    private void GivenUserAuthorized()
+    {
+        var authContext = this.AddTestAuthorization();
+        authContext.SetAuthorized(SomeUserEmail);
+    }
+
+    private void WhenRenderComponent()
+    {
+        _cut = RenderComponent<NavBar>(parameters => parameters.Add(p => p.userId, SomeUserId));
+    }
+
+    private void WhenRenderComponentWithUserEmail()
+    {
+        _cut = RenderComponent<NavBar>(parameters => parameters
+            .Add(p => p.email, SomeUserEmail));
+    }
+
+    private void WhenCartCountChanges()
+    {
+        _mockSharedStateService.Object.TotalCartCount = SomeOtherCartItemCount;
+    }
+
+    private void ThenContainsOneNavLinkWithHref(string expectedHref)
+    {
+        var navs = _cut.FindAll("a.nav-link");
+        var links = navs.Where(i => (i as IHtmlAnchorElement).Href.ToLower().Contains(expectedHref));
+        Assert.Equal(1, links.Count());
+    }
+
+    private void ThenDoesNotContainNavLinkWithHref(string href)
+    {
+        var navs = _cut.FindAll("a.nav-link");
+        var link = navs.FirstOrDefault(i => (i as IHtmlAnchorElement).Href.ToLower().Contains(href));
+        Assert.Null(link);
+    }
+
+    private void ThenDisplaysTheUserEmail()
+    {
+        var navs = _cut.FindAll("a.nav-link");
+        var links = navs.Where(i => i.TextContent.ToLower().Contains(SomeUserEmail));
+        Assert.Equal(1, links.Count());
+    }
+
+    private void ThenDisplaysCartItemCount()
+    {
+        var navs = _cut.FindAll("a.nav-link");
+        var link = navs.FirstOrDefault(i => (i as IHtmlAnchorElement).Href.ToLower().Contains("cart"));
+        Assert.True(link.TextContent.Contains($"({SomeCartItemCount})"));
+    }
+
+    private void ThenDisplaysNewCartItemCount()
+    {
+        var navs = _cut.FindAll("a.nav-link");
+        var link = navs.FirstOrDefault(i => (i as IHtmlAnchorElement).Href.ToLower().Contains("cart"));
+        Assert.True(link.TextContent.Contains($"({SomeOtherCartItemCount})"));
+    }
+}

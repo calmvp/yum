@@ -39,11 +39,11 @@
 </div>
 
 @code {
-    private bool showNavBar;
-    private bool isAdmin;
-    private bool isAuthenticated;
-    private string userId;
-    private string email;
+    public bool showNavBar;
+    public bool isAdmin;
+    public bool isAuthenticated;
+    public string userId;
+    public string email;
     bool IsAuthenticated { get { return UserAuthenticated().Result; }}
 
     protected override async Task OnInitializedAsync()
