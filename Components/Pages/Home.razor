@@ -1,6 +1,9 @@
 ﻿@page "/"
+@implements IDisposable
 @inject ICategoryRepository _categoryRepo
 @inject IProductRepository _productRepo
+@using System.Reactive.Subjects
+@using System.Reactive.Linq
 
 @if (Loading)
 {
@@ -13,10 +16,15 @@ else
             <div class="m-auto d-flex align-items-center" style="width: 400px; height: 50vh;">
 
                 <div class="d-flex align-items-center" style="width: 100%;">
-                    <input type="text" class="form-control rounded-pill"
+                    @*                <input type="text" class="form-control rounded-pill"
                     placeholder="Search for Food Items!"
                     style="width: 100%; padding: 20px;"
                     @oninput="@((e) => FilterProductsByName(e))"
+                    > *@
+                    <input type="text" class="form-control rounded-pill"
+                    placeholder="Search for Food Items!"
+                    style="width: 100%; padding: 20px;"
+                    @oninput="@HandleInput"
                     >
                     <span style="position: relative; left: -43px;"><i class="bi bi-search"></i></span>
                 </div>
@@ -51,7 +59,7 @@ else
                             <li class="page-item"><button class="page-link" @onclick="@(() => @ChangePage(_page - 1))">Previous</button></li>
                         }
 
-                        @for (int i = 1; i <= (int)Math.Ceiling((double)countQueryable.Count() / _pageSize); i++)
+                        @for (int i = 1; i <= _pageCount; i++)
                         {
                             var j = i;
                             <li class="page-item">
@@ -79,8 +87,6 @@ else
 
 @code{
     private IEnumerable<Category> Categories = new List<Category>();
-    private IEnumerable<Product> Products = new List<Product>();
-    private IEnumerable<Product> FilteredProducts = new List<Product>();
     private bool Loading { get; set; } = true;
     private int _selectedCategoryId;
     private string _searchText = string.Empty;
@@ -89,6 +95,8 @@ else
     private int _pageCount = 0;
     private IQueryable<Product> productsQueryable;
     private IQueryable<Product> countQueryable;
+    private readonly Subject<string> _searchSubject = new();
+    private IDisposable? _subscription;
 
     protected override void OnInitialized()
     {
@@ -103,7 +111,16 @@ else
         {
             Categories = await GetCategories();
             Loading = false;
-            _pageCount = (int)Math.Ceiling((double)countQueryable.Count() / _pageSize);
+            _pageCount = GetPageCount();
+            _subscription = _searchSubject
+                .Throttle(TimeSpan.FromMilliseconds(300))
+                .DistinctUntilChanged()
+                .Subscribe(val =>
+                {
+                    _searchText = val.ToString();
+                    ChangePage();
+                    InvokeAsync(StateHasChanged);
+                });
             StateHasChanged();
         }
     }
@@ -131,6 +148,20 @@ else
         return categoryId == _selectedCategoryId ? "active" : string.Empty;
     }
 
+    private int GetPageCount()
+    {
+        return (int)Math.Ceiling((double)countQueryable.Count() / _pageSize);
+    }
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        var searchInput = e.Value?.ToString();
+        if (searchInput != null)
+        {
+            _searchSubject.OnNext(searchInput);
+        }
+    }
+
     private void ChangePage(int page=1)
     {
         _page = page;
@@ -139,6 +170,14 @@ else
 
         countQueryable = _productRepo.GetProductsQueryable(categoryId, searchText);
         var offset = (page - 1) * _pageSize;
+        _pageCount = GetPageCount();
         productsQueryable = countQueryable.Skip(offset).Take(_pageSize);
+    }
+
+    public void Dispose()
+    {
+        _subscription?.Dispose();
+        _searchSubject.OnCompleted();
+        _searchSubject.Dispose();
     }
 }
