@@ -9,5 +9,6 @@ namespace Yum.Repositories.Interfaces
         public Task<bool> DeleteAsync(Product product);
         public Task<Product> GetByIdAsync(int productId);
         public Task<IEnumerable<Product>> GetAllAsync();
+        IQueryable<Product> GetProductsQueryable(int? categoryId = null, string? searchString = null);
     }
 }

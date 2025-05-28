@@ -10,7 +10,6 @@ namespace Yum.Repositories.Interfaces
         public Task<Order> GetBySessionIdAsync(string sessionId);
         public Task<IEnumerable<Order>> GetAllAsync(string? userId = null);
         public Task<bool> UpdateOrderStatusAsync(string key, OrderStatusEnum status, string? paymentIntentId = null);
-
         public IQueryable<Order> GetOrders(string? userId = null);
     }
 }

@@ -36,13 +36,42 @@ else
                 }
             </ul>
             <div class="row mt-4 mx-1">
-                @if (FilteredProducts.Any())
+                @if (countQueryable.Count() > 0)
                 {
-                    foreach(var product in FilteredProducts)
+                    foreach(var product in productsQueryable.ToList())
                     {
                         <ProductTile Product="@product"></ProductTile>
                     }
                 }
+
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        @if (_page > 1)
+                        {
+                            <li class="page-item"><button class="page-link" @onclick="@(() => @ChangePage(_page - 1))">Previous</button></li>
+                        }
+
+                        @for (int i = 1; i <= (int)Math.Ceiling((double)countQueryable.Count() / _pageSize); i++)
+                        {
+                            var j = i;
+                            <li class="page-item">
+                                <button class="page-link @((i) == _page ? "active" : "")"
+                                @onclick="@(() => ChangePage(j))"
+                                >
+                                    @(j)
+                                </button>
+                            </li>
+                        }
+                        @if (_page < _pageCount)
+                        {
+                            <li class="page-item">
+                                <button class="page-link"
+                                @onclick="@(() => @ChangePage(_page + 1))"
+                                >Next</button>
+                            </li>   
+                        }
+                    </ul>
+                </nav
             </div>
         </div>
     </div>
@@ -55,22 +84,28 @@ else
     private bool Loading { get; set; } = true;
     private int _selectedCategoryId;
     private string _searchText = string.Empty;
+    private int _page = 1;
+    private int _pageSize = 3;
+    private int _pageCount = 0;
+    private IQueryable<Product> productsQueryable;
+    private IQueryable<Product> countQueryable;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        countQueryable = _productRepo.GetProductsQueryable();
+        productsQueryable = countQueryable.Skip(0).Take(_pageSize);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             Categories = await GetCategories();
-            Products = await GetProducts();
-            FilteredProducts = Products;
             Loading = false;
+            _pageCount = (int)Math.Ceiling((double)countQueryable.Count() / _pageSize);
             StateHasChanged();
         }
-    }
-
-    private async Task<IEnumerable<Product>> GetProducts()
-    {
-        return await _productRepo.GetAllAsync();
     }
 
     private async Task<IEnumerable<Category>> GetCategories()
@@ -81,35 +116,29 @@ else
     private void FilterProductsByCategory(int categoryId = 0)
     {
         _selectedCategoryId = categoryId;
-        if (categoryId == 0)
-        {
-            FilteredProducts = Products;
-        }
-        else
-        {
-            FilteredProducts = Products.Where(p => p.CategoryId == categoryId).ToList();
-        }
-
-        StateHasChanged();
+        ChangePage();
     }
 
 
     private void FilterProductsByName(ChangeEventArgs changeEventArgs)
     {
-        var searchText = changeEventArgs.Value as string;
-
-        if (string.IsNullOrWhiteSpace(searchText))
-        {
-            FilteredProducts = Products;
-        }
-        else
-        {
-            FilteredProducts = Products.Where(p => p.Name.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
-        }
+        _searchText = changeEventArgs.Value as string;
+        ChangePage();
     }
 
     private string GetActiveTabClass(int categoryId = 0)
     {
         return categoryId == _selectedCategoryId ? "active" : string.Empty;
+    }
+
+    private void ChangePage(int page=1)
+    {
+        _page = page;
+        int? categoryId = _selectedCategoryId > 0 ? _selectedCategoryId : null;
+        string? searchText = !string.IsNullOrWhiteSpace(_searchText) ? _searchText: null;
+
+        countQueryable = _productRepo.GetProductsQueryable(categoryId, searchText);
+        var offset = (page - 1) * _pageSize;
+        productsQueryable = countQueryable.Skip(offset).Take(_pageSize);
     }
 }

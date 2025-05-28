@@ -48,6 +48,28 @@ namespace Yum.Repositories
             return await _db.Products.Include(p => p.Category).ToListAsync();
         }
 
+        public IQueryable<Product> GetProductsQueryable(int? categoryId = null, string? searchString = null)
+        {
+            IQueryable<Product> query = _db.Products;
+            if (categoryId is null && searchString is null)
+            {
+                return query;
+            }
+
+            if (categoryId is not null)
+            {
+                query = query.Where(x => x.CategoryId == categoryId);
+            }
+
+            if (searchString is not null)
+            {
+                query = query.Where(x => x.Name.Contains(searchString));
+            }
+
+            return query;
+        }
+
+
         public async Task<Product> UpdateAsync(Product product)
         {
             var prodFromDb = await _db.Products.FirstOrDefaultAsync(p => p.Id == product.Id);
