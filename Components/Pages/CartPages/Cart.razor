@@ -2,8 +2,6 @@
 @using System.Globalization
 @inject IJSRuntime _jsRuntime
 @inject NavigationManager _navManager
-@inject IProductRepository _productRepo
-@inject ICategoryRepository _categoryRepo
 @inject ICartLineItemRepository _cartLineItemRepo
 @inject ICartService _cartService
 
@@ -44,7 +42,7 @@ else
 
 @code {
 	[CascadingParameter]
-	private bool isAuthenticated { get; set; }
+	public bool isAuthenticated { get; set; }
 
 	[CascadingParameter(Name ="userId")]
 	private string userId { get; set; }
@@ -52,7 +50,6 @@ else
 	private IEnumerable<CartLineItem> CartLineItems { get; set; } = new List<CartLineItem>();
 
 	private bool Loading { get; set; } = true;
-
 
 	protected override void OnInitialized()
 	{
