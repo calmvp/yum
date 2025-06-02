@@ -1,8 +1,10 @@
-﻿using AutoFixture;
+﻿using AngleSharp.Common;
+using AutoFixture;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Threading.Tasks;
 using Yum.Components;
@@ -10,6 +12,7 @@ using Yum.Components.Pages;
 using Yum.Data;
 using Yum.Data.Models;
 using Yum.Repositories.Interfaces;
+using Yum.Services.Interfaces;
 
 namespace YumTest.PageTests
 {
@@ -29,10 +32,12 @@ namespace YumTest.PageTests
             _fixture = new Fixture();
             _mockCategoryRepo = new Mock<ICategoryRepository>();
             _mockProductRepo = new Mock<IProductRepository>();
+            var mockCartService = new Mock<ICartService>();
 
             _context.Services.AddScoped<IProductRepository>(_ => _mockProductRepo.Object);
             _context.Services.AddScoped<ICategoryRepository>(_ => _mockCategoryRepo.Object);
-            _context.ComponentFactories.AddStub<ProductTile>();
+            _context.Services.AddScoped<ICartService>(_ => mockCartService.Object);
+            //_context.ComponentFactories.AddStub<ProductTile>();
         }
 
         [Fact]
@@ -44,14 +49,81 @@ namespace YumTest.PageTests
         }
 
         [Fact]
-        private void DisplaysProducts()
+        private void DisplaysInitialProducts()
         {
             GivenCategories();
             GivenProducts();
             WhenComponentRendered();
-            ThenDisplaysProductTiles(3);
+            ThenDisplaysProductTiles(SomeProducts.GetRange(0,3));
         }
 
+        [Fact]
+        private void DisplaysPageNavigationLinks()
+        {
+            GivenCategories();
+            GivenProducts();
+            WhenComponentRendered();
+            ThenDisplaysPageNavigationLinks(3);
+        }
+
+        [Fact]
+        private void DisplaysANextNavLinkOnFirstRender()
+        {
+            GivenCategories();
+            GivenProducts();
+            WhenComponentRendered();
+            ThenDisplaysNextNavLink();
+        }
+
+        [Fact]
+        private void DoesNotDisplayAPreviousNavLinkOnFirstRender()
+        {
+            GivenCategories();
+            GivenProducts();
+            WhenComponentRendered();
+            ThenDoesNotDisplayPreviousNavLink();
+        }
+
+        [Fact]
+        private void NavigatesToLastPage()
+        {
+            GivenCategories();
+            GivenProducts();
+            GivenComponentRendered();
+            WhenTargetPageLinkClicked("3");
+            ThenDisplaysLastProduct();
+        }
+
+        [Fact]
+        private void NavigatesToNextPage()
+        {
+            GivenCategories();
+            GivenProducts();
+            GivenComponentRendered();
+            WhenTargetPageLinkClicked("Next");
+            ThenDisplaysProductTiles(SomeProducts.GetRange(3, 3));
+        }
+
+        [Fact]
+        private void NavigatesToPreviousPage()
+        {
+            GivenCategories();
+            GivenProducts();
+            GivenComponentRendered();
+            WhenTargetPageLinkClicked("Next");
+            WhenTargetPageLinkClicked("Previous");
+            ThenDisplaysProductTiles(SomeProducts.GetRange(0, 3));
+        }
+
+        [Fact]
+        private void DoesNotDisplayNextLinkOnLastPage()
+        {
+            GivenCategories();
+            GivenProducts();
+            GivenComponentRendered();
+            WhenTargetPageLinkClicked("3");
+            ThenDoesNotDisplayNextNavLink();
+        }
 
         private void GivenCategories()
         {
@@ -76,9 +148,18 @@ namespace YumTest.PageTests
             _context.Services.AddScoped<IProductRepository>(_ => _mockProductRepo.Object);
         }
 
+        private void GivenComponentRendered() => WhenComponentRendered();
+
         private void WhenComponentRendered()
         {
             _cut = _context.RenderComponent<Home>();
+        }
+
+        private void WhenTargetPageLinkClicked(string linkText)
+        {
+
+            var targetButton = _cut.FindAll("button.page-link").Single(btn => btn.TextContent.Trim() == linkText);
+            targetButton.Click();
         }
 
         private void ThenDisplaysCategoryNavItems()
@@ -87,11 +168,49 @@ namespace YumTest.PageTests
             Assert.Equal(8, navItems.Count);
         }
 
-        private void ThenDisplaysProductTiles(int expectedTileCount)
+        private void ThenDisplaysProductTiles(List<Product> expectedProducts)
         {
-            var productTiles = _cut.FindComponents<Stub<ProductTile>>();
-            Assert.Equal(expectedTileCount, productTiles.Count);
+            var productTiles = _cut.FindComponents<ProductTile>();
+            Assert.Equal(expectedProducts.Count, productTiles.Count);
+
+            for (int i = 0; i < expectedProducts.Count; i++) 
+            {
+                Assert.Equal(expectedProducts.GetItemByIndex(i), productTiles.GetItemByIndex(i).Instance.Product);
+            }
         }
 
+        private void ThenDisplaysPageNavigationLinks(int expectedPageLinkCount)
+        {
+            var pageLinks = _cut.FindAll("button.page-link");
+            for (int i = 1; i <= expectedPageLinkCount; i++)
+            {
+                Assert.Single(pageLinks.Where(x => x.TextContent.Trim() == i.ToString()));
+            }
+        }
+
+        private void ThenDisplaysNextNavLink()
+        {
+            var targetEl = _cut.FindAll("button.page-link").Single(btn => btn.TextContent.Trim() == "Next");
+            Assert.NotNull(targetEl);
+        }
+
+        private void ThenDoesNotDisplayPreviousNavLink()
+        {
+            var targetEl = _cut.FindAll("button.page-link").SingleOrDefault(btn => btn.TextContent.Trim() == "Previous");
+            Assert.Null(targetEl);
+        }
+
+        private void ThenDoesNotDisplayNextNavLink()
+        {
+            var targetEl = _cut.FindAll("button.page-link").SingleOrDefault(btn => btn.TextContent.Trim() == "Next");
+            Assert.Null(targetEl);
+        }
+
+        private void ThenDisplaysLastProduct()
+        {
+            var productTiles = _cut.FindComponents<ProductTile>();
+            Assert.Single(productTiles);
+            Assert.Equal(SomeProducts.Last(), productTiles.Single().Instance.Product);
+        }
     }
 }
