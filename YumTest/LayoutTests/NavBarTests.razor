@@ -1,7 +1,10 @@
 ﻿@inherits TestContext
 @using Yum.Components.Layout
+@using System.IO
 
 @code {
+    private readonly bool _generateMode =
+       Environment.GetEnvironmentVariable("GENERATE_SNAPSHOTS") == "true";
     private Mock<ICartLineItemRepository> _mockCartLineRepo;
     private Mock<SharedStateService> _mockSharedStateService;
     private IRenderedComponent<NavBar> _cut;
@@ -110,6 +113,48 @@
         ThenDisplaysNewCartItemCount();
     }
 
+    [Fact]
+    public void MatchesAcceptedUnauthorizedNavbar()
+    {
+        GivenUserNotAuthorized();
+        WhenRenderComponent();
+        ThenMatchesApproved("UnauthorizedNavBar");
+    }
+
+    [Fact]
+    public void MatchesAcceptedAuthorizedNavBar()
+    {
+        GivenUserAuthorized();
+        WhenRenderComponentWithUserEmail();
+        ThenMatchesApproved("AuthorizedNavBar");
+    }
+
+    // [Fact]
+    // public void GenerateUnauthorizedSnapshot()
+    // {
+    //     GivenUserNotAuthorized();
+    //     WhenRenderComponent();
+    //     var rawOutput = _cut.Markup;
+
+    //     string sCurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+    //     string sFile = System.IO.Path.Combine(sCurrentDirectory, @"..\..\..\Snapshots\Raw\UnauthorizedNavBar.html");
+    //     string sFilePath = Path.GetFullPath(sFile);
+    //     File.WriteAllText(sFilePath, rawOutput);
+    // }
+
+    // [Fact]
+    // public void GenerateAuthorizedSnapshot()
+    // {
+    //     GivenUserAuthorized();
+    //     WhenRenderComponentWithUserEmail();
+    //     var rawOutput = _cut.Markup;
+
+    //     string sCurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+    //     string sFile = System.IO.Path.Combine(sCurrentDirectory, @"..\..\..\Snapshots\Raw\AuthorizedNavBar.html");
+    //     string sFilePath = Path.GetFullPath(sFile);
+    //     File.WriteAllText(sFilePath, rawOutput);
+    // }
+
     private void GivenUserNotAuthorized()
     {
         this.AddTestAuthorization();
@@ -170,5 +215,20 @@
         var navs = _cut.FindAll("a.nav-link");
         var link = navs.FirstOrDefault(i => (i as IHtmlAnchorElement).Href.ToLower().Contains("cart"));
         Assert.True(link.TextContent.Contains($"({SomeOtherCartItemCount})"));
+    }
+
+    private void ThenMatchesApproved(string name)
+    {
+        string sCurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        string sFile = System.IO.Path.Combine(sCurrentDirectory, @$"..\..\..\Snapshots\Raw\{name}.html");
+        string sFilePath = Path.GetFullPath(sFile);
+        if (!File.Exists(sFilePath))
+        {
+            throw new InvalidOperationException(
+                $"No approved snapshot for {name}. Run in generate mode first.");
+        }
+
+        var approved = File.ReadAllText(sFilePath);
+        _cut.MarkupMatches(approved);
     }
 }
