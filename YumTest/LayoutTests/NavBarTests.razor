@@ -135,11 +135,12 @@
     //     GivenUserNotAuthorized();
     //     WhenRenderComponent();
     //     var rawOutput = _cut.Markup;
+    //     var wrappedMarkup = SnapshotHelper.WrapWithStyles(rawOutput);
 
     //     string sCurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
     //     string sFile = System.IO.Path.Combine(sCurrentDirectory, @"..\..\..\Snapshots\Raw\UnauthorizedNavBar.html");
     //     string sFilePath = Path.GetFullPath(sFile);
-    //     File.WriteAllText(sFilePath, rawOutput);
+    //     File.WriteAllText(sFilePath, wrappedMarkup);
     // }
 
     // [Fact]
